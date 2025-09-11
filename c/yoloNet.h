@@ -30,7 +30,7 @@
  * Name of default input blob for YOLO model.
  * @ingroup yoloNet
  */
-#define YOLONET_DEFAULT_INPUT   "image"
+#define YOLONET_DEFAULT_INPUT   "images"
 
 /**
  * Name of default output blob for YOLO model.

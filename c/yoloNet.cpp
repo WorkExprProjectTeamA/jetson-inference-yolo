@@ -141,6 +141,207 @@ yoloNet* yoloNet::Create( const char* prototxt, const char* model, float mean_pi
 	return net;
 }
 
+// allocDetections
+bool yoloNet::allocDetections()
+{
+	mNumClasses = DIMS_H(mOutputs[0].dims) - 5;
+	mMaxDetections = DIMS_W(mOutputs[0].dims) /** mNumClasses*/;
+	LogInfo(LOG_TRT "yoloNet -- number of object classes: %u\n", mNumClasses);
+
+	LogVerbose(LOG_TRT "yoloNet -- maximum bounding boxes:   %u\n", mMaxDetections);
+
+	// allocate array to store detection results
+	const size_t det_size = sizeof(Detection) * mNumDetectionSets * mMaxDetections;
+	
+	if( !cudaAllocMapped((void**)&mDetectionSets, det_size) )
+		return false;
+	
+	memset(mDetectionSets, 0, det_size);
+	return true;
+}
+
+// loadClassInfo
+bool yoloNet::loadClassInfo( const char* filename )
+{
+	if( !LoadClassLabels(filename, mClassDesc, mClassSynset, mNumClasses) )
+		return false;
+
+	if( IsModelType(MODEL_UFF) )
+		mNumClasses = mClassDesc.size();
+
+	LogInfo(LOG_TRT "yoloNet -- number of object classes:  %u\n", mNumClasses);
+	
+	if( filename != NULL )
+		mClassPath = locateFile(filename);	
+	
+	return true;
+}
+
+
+// loadClassColors
+bool yoloNet::loadClassColors( const char* filename )
+{
+	return LoadClassColors(filename, &mClassColors, mNumClasses, YOLONET_DEFAULT_ALPHA);
+}
+
+
+int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay )
+{
+	Detection* det = mDetectionSets + mDetectionSet * GetMaxDetections();
+
+	if( detections != NULL )
+		*detections = det;
+
+	mDetectionSet++;
+
+	if( mDetectionSet >= mNumDetectionSets )
+		mDetectionSet = 0;
+	
+	return Detect(input, width, height, format, det, overlay);
+}
+
+// Detect
+int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay )
+{
+	// verify parameters
+	if( !input || width == 0 || height == 0 || !detections )
+	{
+		LogError(LOG_TRT "detectNet::Detect( 0x%p, %u, %u ) -> invalid parameters\n", input, width, height);
+		return -1;
+	}
+	
+	if( !imageFormatIsRGB(format) )
+	{
+		LogError(LOG_TRT "detectNet::Detect() -- unsupported image format (%s)\n", imageFormatToStr(format));
+		LogError(LOG_TRT "                       supported formats are:\n");
+		LogError(LOG_TRT "                          * rgb8\n");		
+		LogError(LOG_TRT "                          * rgba8\n");		
+		LogError(LOG_TRT "                          * rgb32f\n");		
+		LogError(LOG_TRT "                          * rgba32f\n");
+
+		return false;
+	}
+	
+	// apply input pre-processing
+	if( !preProcess(input, width, height, format) )
+		return -1;
+	
+	// process model with TensorRT 
+	PROFILER_BEGIN(PROFILER_NETWORK);
+
+	if( !ProcessNetwork() )
+		return -1;
+	
+	PROFILER_END(PROFILER_NETWORK);
+	
+	// post-processing / clustering
+	const int numDetections = postProcess(input, width, height, format, detections);
+
+	// render the overlay
+	if( overlay != 0 && numDetections > 0 )
+	{
+		if( !Overlay(input, input, width, height, format, detections, numDetections, overlay) )
+			LogError(LOG_TRT "detectNet::Detect() -- failed to render overlay\n");
+	}
+	
+	// wait for GPU to complete work			
+	//CUDA(cudaDeviceSynchronize());	// BUG is this needed here?
+
+	// return the number of detections
+	return numDetections;
+}
+
+
+// preProcess
+bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFormat format )
+{
+	PROFILER_BEGIN(PROFILER_PREPROCESS);
+
+	if( IsModelType(MODEL_ONNX) )
+	{
+		// SSD (PyTorch / ONNX)
+		if( CUDA_FAILED(cudaTensorNormMeanRGB(input, format, width, height,
+									   mInputs[0].CUDA, GetInputWidth(), GetInputHeight(), 
+									   make_float2(0.0f, 1.0f), 
+									   make_float3(0.5f, 0.5f, 0.5f),
+									   make_float3(0.5f, 0.5f, 0.5f), 
+									   GetStream())) )
+		{
+			LogError(LOG_TRT "yoloNet::Detect() -- cudaTensorNormMeanRGB() failed\n");
+			return false;
+		}
+	}
+
+	
+	PROFILER_END(PROFILER_PREPROCESS);
+	return true;
+}
+
+
+// postProcess
+int yoloNet::postProcess( Detection* detections, uint32_t width, uint32_t height )
+{
+	int numDetections = 0;
+	
+	float* output = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
+	
+	const uint32_t numAnchors = DIMS_W(mOutputs[0].dims);  // 8400
+	const uint32_t numChannels = DIMS_H(mOutputs[0].dims); // 60
+	
+	// YOLO format: [x, y, w, h, objectness, class0, class1, ..., classN]
+	const uint32_t numClasses = numChannels - 5; // 55 classes
+	
+	for( uint32_t n = 0; n < numAnchors; n++ )
+	{
+		const float* anchor = &output[n * numChannels];
+		
+		const float objectness = anchor[4];
+		
+		if( objectness < mConfidenceThreshold )
+			continue;
+			
+		// Find max class probability
+		float maxClassProb = 0.0f;
+		uint32_t maxClass = 0;
+		
+		for( uint32_t c = 0; c < numClasses; c++ )
+		{
+			const float classProb = anchor[5 + c];
+			if( classProb > maxClassProb )
+			{
+				maxClassProb = classProb;
+				maxClass = c;
+			}
+		}
+		
+		const float confidence = objectness * maxClassProb;
+		
+		if( confidence < mConfidenceThreshold )
+			continue;
+			
+		// Convert YOLO format to pixel coordinates
+		const float cx = anchor[0] * width;
+		const float cy = anchor[1] * height;
+		const float w = anchor[2] * width;
+		const float h = anchor[3] * height;
+		
+		detections[numDetections].ClassID = maxClass;
+		detections[numDetections].Confidence = confidence;
+		detections[numDetections].Left = cx - w * 0.5f;
+		detections[numDetections].Right = cx + w * 0.5f;
+		detections[numDetections].Top = cy - h * 0.5f;
+		detections[numDetections].Bottom = cy + h * 0.5f;
+		
+		numDetections++;
+		
+		if( numDetections >= mMaxDetections )
+			break;
+	}
+	
+	return numDetections;
+}
+
+
 // OverlayFlagsFromStr
 uint32_t yoloNet::OverlayFlagsFromStr( const char* str_user )
 {
