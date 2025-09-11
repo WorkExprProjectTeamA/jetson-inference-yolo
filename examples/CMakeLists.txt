@@ -6,6 +6,7 @@ add_subdirectory(detectnet)
 add_subdirectory(segnet)
 #add_subdirectory(actionnet)
 #add_subdirectory(backgroundnet)
+add_subdirectory(yolonet)
 
 # experimental examples
 if(BUILD_EXPERIMENTAL)
