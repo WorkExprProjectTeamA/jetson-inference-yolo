@@ -28,6 +28,8 @@
 #include "cudaMappedMemory.h"
 #include "cudaFont.h"
 #include "cudaDraw.h"
+#include "cudaResize.h"
+#include "cudaColorspace.h"
 
 #include "commandLine.h"
 #include "filesystem.h"
@@ -200,6 +202,7 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 	return Detect(input, width, height, format, det, overlay);
 }
 
+
 // Detect
 int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay )
 {
@@ -251,59 +254,92 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 	return numDetections;
 }
 
+// from yolonet.cu
+cudaError_t cudaLetterbox(void* input, imageFormat input_format, 
+                         uint32_t input_width, uint32_t input_height,
+                         void* output, imageFormat output_format,
+                         uint32_t output_width, uint32_t output_height,
+                         const float3& pad_color,
+                         yoloNet::LetterboxInfo* info,
+                         cudaStream_t stream);
 
 // preProcess
 bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFormat format )
 {
 	PROFILER_BEGIN(PROFILER_PREPROCESS);
 
+    const uint32_t modelWidth = GetInputWidth();
+    const uint32_t modelHeight = GetInputHeight();
+
+    const size_t channels =imageFormatChannels(format);
+    const size_t letterboxSize = modelWidth * modelHeight * channels * sizeof(uint8_t);
+
+    void* letterboxBuffer = nullptr;
+
+    if( CUDA_FAILED(cudaMalloc(&letterboxBuffer, letterboxSize)) ) 
+	{
+		LogError(LOG_TRT "yoloNet::preProcess() -- failed to allocate letterbox buffer\n");
+
+		return false;
+	}
+
+
+    if( CUDA_FAILED(cudaLetterbox(input, format, width, height, letterboxBuffer, format, modelWidth, modelHeight, make_float3(114.0f, 114.0f, 114.0f), &mLastLetterboxInfo, GetStream())) )
+	{
+			LogError(LOG_TRT "yoloNet::preProcess() -- cudaLetterbox() failed\n");
+			cudaFree(letterboxBuffer);
+			return false;
+	}
+
+
 	if( IsModelType(MODEL_ONNX) )
 	{
-		// SSD (PyTorch / ONNX)
-		if( CUDA_FAILED(cudaTensorNormMeanRGB(input, format, width, height,
-									   mInputs[0].CUDA, GetInputWidth(), GetInputHeight(), 
-									   make_float2(0.0f, 1.0f), 
-									   make_float3(0.5f, 0.5f, 0.5f),
-									   make_float3(0.5f, 0.5f, 0.5f), 
-									   GetStream())) )
+
+        if( CUDA_FAILED(cudaTensorNormRGB(letterboxBuffer, format, modelWidth, modelHeight, mInputs[0].CUDA, modelWidth, modelHeight,  make_float2(0.0f, 1.0f), GetStream())) )
 		{
-			LogError(LOG_TRT "yoloNet::Detect() -- cudaTensorNormMeanRGB() failed\n");
-			return false;
+				LogError(LOG_TRT "yoloNet::preProcess() -- cudaTensorNormRGB() failed\n");
+				cudaFree(letterboxBuffer);
+				return false;
 		}
 	}
 
-	
+
+	cudaFree(letterboxBuffer);
+
 	PROFILER_END(PROFILER_PREPROCESS);
 	return true;
 }
 
 
-// postProcess
-int yoloNet::postProcess( Detection* detections, uint32_t width, uint32_t height )
+// postProcess (detectNet 스타일)
+int yoloNet::postProcess( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections )
 {
+	PROFILER_BEGIN(PROFILER_POSTPROCESS);
+
 	int numDetections = 0;
-	
+
 	float* output = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
-	
+
 	const uint32_t numAnchors = DIMS_W(mOutputs[0].dims);  // 8400
 	const uint32_t numChannels = DIMS_H(mOutputs[0].dims); // 60
-	
+
 	// YOLO format: [x, y, w, h, objectness, class0, class1, ..., classN]
 	const uint32_t numClasses = numChannels - 5; // 55 classes
-	
-	for( uint32_t n = 0; n < numAnchors; n++ )
+
+	for( uint32_t n = 0; n < numAnchors; n++)
 	{
 		const float* anchor = &output[n * numChannels];
-		
+
 		const float objectness = anchor[4];
-		
-		if( objectness < mConfidenceThreshold )
+
+		// Python YOLO uses 0.25 as initial threshold
+		if( objectness < 0.25f )
 			continue;
-			
+
 		// Find max class probability
 		float maxClassProb = 0.0f;
 		uint32_t maxClass = 0;
-		
+
 		for( uint32_t c = 0; c < numClasses; c++ )
 		{
 			const float classProb = anchor[5 + c];
@@ -313,32 +349,252 @@ int yoloNet::postProcess( Detection* detections, uint32_t width, uint32_t height
 				maxClass = c;
 			}
 		}
-		
+
+		// Python YOLO: combined confidence
 		const float confidence = objectness * maxClassProb;
-		
+
 		if( confidence < mConfidenceThreshold )
 			continue;
-			
-		// Convert YOLO format to pixel coordinates
-		const float cx = anchor[0] * width;
-		const float cy = anchor[1] * height;
-		const float w = anchor[2] * width;
-		const float h = anchor[3] * height;
-		
+
+		// Convert YOLO format (center_x, center_y, w, h) to (x1, y1, x2, y2)
+		const float modelWidth = GetInputWidth();
+		const float modelHeight = GetInputHeight();
+
+		const float cx = anchor[0] * modelWidth;
+		const float cy = anchor[1] * modelHeight;
+		const float w = anchor[2] * modelWidth;
+		const float h = anchor[3] * modelHeight;
+
 		detections[numDetections].ClassID = maxClass;
 		detections[numDetections].Confidence = confidence;
 		detections[numDetections].Left = cx - w * 0.5f;
 		detections[numDetections].Right = cx + w * 0.5f;
 		detections[numDetections].Top = cy - h * 0.5f;
 		detections[numDetections].Bottom = cy + h * 0.5f;
-		
+
 		numDetections++;
-		
-		if( numDetections >= mMaxDetections )
+
+		if( numDetections >= mMaxDetections)
 			break;
+    }
+
+    // Scale coordinates back to original image (letterbox → original)
+    scaleCoordinates(detections, numDetections, width, height);
+
+    // Apply NMS (Python YOLO style)
+    numDetections = applyNMS(detections, numDetections, 0.45f);
+
+    // Sort by confidence (detectNet 스타일)
+    if( numDetections > 1 )
+        sortDetections(detections, numDetections);
+
+    PROFILER_END(PROFILER_POSTPROCESS);
+    
+	return numDetections;
+}
+
+// Scale coordinates from letterbox to original image
+void yoloNet::scaleCoordinates( Detection* detections, int numDetections, uint32_t originalWidth, uint32_t originalHeight )
+{
+	for( int i = 0; i < numDetections; i++ )
+	{
+		// Remove padding
+		detections[i].Left -= mLastLetterboxInfo.pad_x;
+		detections[i].Right -= mLastLetterboxInfo.pad_x;
+		detections[i].Top -= mLastLetterboxInfo.pad_y;
+		detections[i].Bottom -= mLastLetterboxInfo.pad_y;
+
+		// Scale back to original
+		detections[i].Left /= mLastLetterboxInfo.scale;
+		detections[i].Right /= mLastLetterboxInfo.scale;
+		detections[i].Top /= mLastLetterboxInfo.scale;
+		detections[i].Bottom /= mLastLetterboxInfo.scale;
+
+		// Clip to image boundaries
+		detections[i].Left = fmaxf(0.0f, fminf((float)originalWidth, detections[i].Left));
+		detections[i].Right = fmaxf(0.0f, fminf((float)originalWidth, detections[i].Right));
+		detections[i].Top = fmaxf(0.0f, fminf((float)originalHeight, detections[i].Top));
+		detections[i].Bottom = fmaxf(0.0f, fminf((float)originalHeight, detections[i].Bottom));
+	}
+}
+
+int yoloNet::applyNMS( Detection* detections, int numDetections, float iouThreshold )
+{
+	if( numDetections <= 1 )
+		return numDetections;
+
+	// Sort by confidence (highest first)
+	std::sort(detections, detections + numDetections, 
+			[](const Detection& a, const Detection& b) 
+			{
+				return a.Confidence > b.Confidence;
+			});
+
+	std::vector<bool> suppressed(numDetections, false);
+	int kept = 0;
+
+	for( int i = 0; i < numDetections; i++)
+	{
+		if( suppressed[i] )
+			continue;
+
+		// Keep this detection
+		if( kept != i )
+			detections[kept] = detections[i];
+		kept++;
+
+		// Suppress overlapping detections
+		for( int j = i + 1; j < numDetections; j++ )
+		{
+			if( suppressed[j] )
+				continue;
+
+			float iou = detections[i].IOU(detections[j]);
+			if( iou > iouThreshold )
+				suppressed[j] = true;
+		}
+	}
+
+	return kept;
+}
+
+// sortDetections (by area)
+void yoloNet::sortDetections( Detection* detections, int numDetections )
+{
+	if( numDetections < 2 )
+		return;
+
+	// order by area (descending) or confidence (ascending)
+	for( int i=0; i < numDetections-1; i++ )
+	{
+		for( int j=0; j < numDetections-i-1; j++ )
+		{
+			if( detections[j].Area() < detections[j+1].Area() ) //if( detections[j].Confidence > detections[j+1].Confidence )
+			{
+				const Detection det = detections[j];
+				detections[j] = detections[j+1];
+				detections[j+1] = det;
+			}
+		}
+	}
+
+	// renumber the instance ID's
+	//for( int i=0; i < numDetections; i++ )
+	//	detections[i].TrackID = i;	
+}
+
+// from yoloNet.cu
+cudaError_t cudaDetectionOverlay( void* input, void* output, uint32_t width, uint32_t height, imageFormat format, yoloNet::Detection* detections, int numDetections, float4* colors );
+
+// Overlay
+bool yoloNet::Overlay( void* input, void* output, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t numDetections, uint32_t flags )
+{
+	PROFILER_BEGIN(PROFILER_VISUALIZE);
+
+	if( flags == 0 )
+	{
+		LogError(LOG_TRT "detectNet -- Overlay() was called with OVERLAY_NONE, returning false\n");
+		return false;
+	}
+
+	// if input and output are different images, copy the input to the output first
+	// then overlay the bounding boxes, ect. on top of the output image
+	if( input != output )
+	{
+		if( CUDA_FAILED(cudaMemcpy(output, input, imageFormatSize(format, width, height), cudaMemcpyDeviceToDevice)) )
+		{
+			LogError(LOG_TRT "detectNet -- Overlay() failed to copy input image to output image\n");
+			return false;
+		}
+	}
+
+	// make sure there are actually detections
+	if( numDetections <= 0 )
+	{
+		PROFILER_END(PROFILER_VISUALIZE);
+		return true;
+	}
+
+	// bounding box overlay
+	if( flags & OVERLAY_BOX )
+	{
+		if( CUDA_FAILED(cudaDetectionOverlay(input, output, width, height, format, detections, numDetections, mClassColors)) )
+			return false;
 	}
 	
-	return numDetections;
+	// bounding box lines
+	if( flags & OVERLAY_LINES )
+	{
+		for( uint32_t n=0; n < numDetections; n++ )
+		{
+			const Detection* d = detections + n;
+			const float4& color = mClassColors[d->ClassID];
+
+			CUDA(cudaDrawLine(input, output, width, height, format, d->Left, d->Top, d->Right, d->Top, color, mLineWidth));
+			CUDA(cudaDrawLine(input, output, width, height, format, d->Right, d->Top, d->Right, d->Bottom, color, mLineWidth));
+			CUDA(cudaDrawLine(input, output, width, height, format, d->Left, d->Bottom, d->Right, d->Bottom, color, mLineWidth));
+			CUDA(cudaDrawLine(input, output, width, height, format, d->Left, d->Top, d->Left, d->Bottom, color, mLineWidth));
+		}
+	}
+			
+	// class label overlay
+	if( (flags & OVERLAY_LABEL) || (flags & OVERLAY_CONFIDENCE) || (flags & OVERLAY_TRACKING) )
+	{
+		static cudaFont* font = NULL;
+
+		// make sure the font object is created
+		if( !font )
+		{
+			font = cudaFont::Create(adaptFontSize(width));  // 20.0f
+	
+			if( !font )
+			{
+				LogError(LOG_TRT "detectNet -- Overlay() was called with OVERLAY_FONT, but failed to create cudaFont()\n");
+				return false;
+			}
+		}
+
+		// draw each object's description
+	#ifdef BATCH_TEXT
+		std::vector<std::pair<std::string, int2>> labels;
+	#endif 
+		for( uint32_t n=0; n < numDetections; n++ )
+		{
+			const char* className  = GetClassDesc(detections[n].ClassID);
+			const float confidence = detections[n].Confidence * 100.0f;
+			const int2  position   = make_int2(detections[n].Left+5, detections[n].Top+3);
+			
+			char buffer[256];
+			char* str = buffer;
+			
+			if( flags & OVERLAY_LABEL )
+				str += sprintf(str, "%s ", className);
+			
+			if( flags & OVERLAY_TRACKING && detections[n].TrackID >= 0 )
+				str += sprintf(str, "%i ", detections[n].TrackID);
+			
+			if( flags & OVERLAY_CONFIDENCE )
+				str += sprintf(str, "%.1f%%", confidence);
+
+		#ifdef BATCH_TEXT
+			labels.push_back(std::pair<std::string, int2>(buffer, position));
+		#else
+			float4 color = make_float4(255,255,255,255);
+		
+			if( detections[n].TrackID >= 0 )
+				color.w *= 1.0f - (fminf(detections[n].TrackLost, 15.0f) / 15.0f);
+			
+			font->OverlayText(output, format, width, height, buffer, position.x, position.y, color);
+		#endif
+		}
+
+	#ifdef BATCH_TEXT
+		font->OverlayText(output, format, width, height, labels, make_float4(255,255,255,255));
+	#endif
+	}
+	
+	PROFILER_END(PROFILER_VISUALIZE);
+	return true;
 }
 
 

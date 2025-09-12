@@ -22,6 +22,9 @@
 
 #include "yoloNet.h"
 #include "cudaUtility.h"
+#include "cudaResize.h"
+#include "cudaColorspace.h"
+#include <cmath>
 
 
 
@@ -90,6 +93,50 @@ __global__ void gpuDetectionOverlayBox( T* input, T* output, int imgWidth, int i
 }
 
 template<typename T>
+__global__ void gpuLetterbox(T* input, int input_width, int input_height,
+                               T* output, int output_width, int output_height,
+                               float scale, int pad_x, int pad_y, int new_width, int new_height,
+                               float3 pad_color, int channels)
+{
+    const int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const int y = blockIdx.y * blockDim.y + threadIdx.y;
+    
+    if (x >= output_width || y >= output_height)
+        return;
+    
+    // Check if pixel is in padded area
+    if (x < pad_x || x >= pad_x + new_width || 
+        y < pad_y || y >= pad_y + new_height) {
+        // Set padding color
+        for (int c = 0; c < channels; c++) {
+            int idx = y * output_width * channels + x * channels + c;
+            if (c == 0) output[idx] = pad_color.x;
+            else if (c == 1) output[idx] = pad_color.y;
+            else if (c == 2) output[idx] = pad_color.z;
+            else output[idx] = 255; // Alpha channel
+        }
+    } else {
+        // Map to input coordinates
+        float src_x = (x - pad_x) / scale;
+        float src_y = (y - pad_y) / scale;
+        
+        int src_x_int = (int)src_x;
+        int src_y_int = (int)src_y;
+        
+        // Bounds check
+        if (src_x_int >= 0 && src_x_int < input_width && 
+            src_y_int >= 0 && src_y_int < input_height) {
+            
+            for (int c = 0; c < channels; c++) {
+                int src_idx = src_y_int * input_width * channels + src_x_int * channels + c;
+                int dst_idx = y * output_width * channels + x * channels + c;
+                output[dst_idx] = input[src_idx];
+            }
+        }
+    }
+}
+
+template<typename T>
 cudaError_t launchDetectionOverlay( T* input, T* output, uint32_t width, uint32_t height, yoloNet::Detection* detections, int numDetections, float4* colors )
 {
 	if( !input || !output || width == 0 || height == 0 || !detections || numDetections == 0 || !colors )
@@ -131,3 +178,60 @@ cudaError_t cudaDetectionOverlay( void* input, void* output, uint32_t width, uin
 		return cudaErrorInvalidValue;
 }
 
+
+cudaError_t cudaLetterbox(void* input, imageFormat input_format, 
+                         uint32_t input_width, uint32_t input_height,
+                         void* output, imageFormat output_format,
+                         uint32_t output_width, uint32_t output_height,
+                         const float3& pad_color,
+                         yoloNet::LetterboxInfo* info,
+                         cudaStream_t stream)
+{
+    if (!input || !output)
+        return cudaErrorInvalidValue;
+    
+    // Calculate letterbox parameters
+    float scale = std::min((float)output_width / input_width, 
+                          (float)output_height / input_height);
+    
+    int new_width = (int)(input_width * scale);
+    int new_height = (int)(input_height * scale);
+    
+    int pad_x = (output_width - new_width) / 2;
+    int pad_y = (output_height - new_height) / 2;
+    
+    // Store info if requested
+    if (info) {
+        info->scale = scale;
+        info->pad_x = pad_x;
+        info->pad_y = pad_y;
+        info->new_width = new_width;
+        info->new_height = new_height;
+    }
+    
+    // Get number of channels
+    int channels = imageFormatChannels(input_format);
+    
+    // Launch kernel
+    dim3 blockSize(16, 16);
+    dim3 gridSize((output_width + blockSize.x - 1) / blockSize.x,
+                  (output_height + blockSize.y - 1) / blockSize.y);
+    
+    if (input_format == IMAGE_RGB8 || input_format == IMAGE_RGBA8) {
+        gpuLetterbox<uint8_t><<<gridSize, blockSize, 0, stream>>>(
+            (uint8_t*)input, input_width, input_height,
+            (uint8_t*)output, output_width, output_height,
+            scale, pad_x, pad_y, new_width, new_height,
+            pad_color, channels);
+    } else if (input_format == IMAGE_RGB32F || input_format == IMAGE_RGBA32F) {
+        gpuLetterbox<float><<<gridSize, blockSize, 0, stream>>>(
+            (float*)input, input_width, input_height,
+            (float*)output, output_width, output_height,
+            scale, pad_x, pad_y, new_width, new_height,
+            make_float3(pad_color.x/255.0f, pad_color.y/255.0f, pad_color.z/255.0f), channels);
+    } else {
+        return cudaErrorInvalidValue;
+    }
+    
+    return cudaGetLastError();
+}

@@ -205,6 +205,17 @@ public:
 	};
 
 	/**
+	 * Letterbox for pre/post processing
+	*/
+	struct LetterboxInfo {
+          float scale;
+          int pad_x;
+          int pad_y;
+          int new_width;
+          int new_height;
+    };
+
+	/**
 	 * Parse a string sequence into OverlayFlags enum.
 	 * Valid flags are "none", "box", "label", and "conf" and it is possible to combine flags
 	 * (bitwise OR) together with commas or pipe (|) symbol.  For example, the string sequence
@@ -237,6 +248,69 @@ public:
     
     virtual ~yoloNet();
 
+	/**
+	 * Detect object locations from an image, returning an array containing the detection results.
+	 * @param[in]  input input image in CUDA device memory (uchar3/uchar4/float3/float4)
+	 * @param[in]  width width of the input image in pixels.
+	 * @param[in]  height height of the input image in pixels.
+	 * @param[out] detections pointer that will be set to array of detection results (residing in shared CPU/GPU memory)
+	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
+	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
+	 */
+	template<typename T> int Detect( T* image, uint32_t width, uint32_t height, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT )		{ return Detect((void*)image, width, height, imageFormatFromType<T>(), detections, overlay); }
+
+	/**
+	 * Detect object locations from an image, returning an array containing the detection results.
+	 * @param[in]  input input image in CUDA device memory (uchar3/uchar4/float3/float4)
+	 * @param[in]  width width of the input image in pixels.
+	 * @param[in]  height height of the input image in pixels.
+	 * @param[out] detections pointer that will be set to array of detection results (residing in shared CPU/GPU memory)
+	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
+	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
+	 */
+	int Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT );
+
+	/**
+	 * Detect object locations from an image, into an array of the results allocated by the user.
+	 * @param[in]  input input image in CUDA device memory (uchar3/uchar4/float3/float4)
+	 * @param[in]  width width of the input image in pixels.
+	 * @param[in]  height height of the input image in pixels.
+	 * @param[out] detections pointer to user-allocated array that will be filled with the detection results.
+	 *             @see GetMaxDetections() for the number of detection results that should be allocated in this buffer.
+	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
+	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
+	 */
+	int Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay=OVERLAY_DEFAULT );
+	
+	/**
+	 * Draw the detected bounding boxes overlayed on an RGBA image.
+	 * @note Overlay() will automatically be called by default by Detect(), if the overlay parameter is true 
+	 * @param input input image in CUDA device memory.
+	 * @param output output image in CUDA device memory.
+	 * @param detections Array of detections allocated in CUDA device memory.
+	 */
+	template<typename T> bool Overlay( T* input, T* output, uint32_t width, uint32_t height, Detection* detections, uint32_t numDetections, uint32_t flags=OVERLAY_DEFAULT )			{ return Overlay(input, output, width, height, imageFormatFromType<T>(), detections, numDetections, flags); }
+	
+	/**
+	 * Draw the detected bounding boxes overlayed on an RGBA image.
+	 * @note Overlay() will automatically be called by default by Detect(), if the overlay parameter is true 
+	 * @param input input image in CUDA device memory.
+	 * @param output output image in CUDA device memory.
+	 * @param detections Array of detections allocated in CUDA device memory.
+	 */
+	bool Overlay( void* input, void* output, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t numDetections, uint32_t flags=OVERLAY_DEFAULT );
+
+	/**
+	 * Retrieve the maximum number of simultaneous detections the network supports.
+	 * Knowing this is useful for allocating the buffers to store the output detection results.
+	 */
+	inline uint32_t GetMaxDetections() const					{ return mMaxDetections; } 
+
+	/**
+	 * Retrieve the description of a particular class.
+	 */
+	inline const char* GetClassDesc( uint32_t index )	const		{ if(index >= mClassDesc.size()) { printf("invalid class %u\n", index); return "Invalid"; } return mClassDesc[index].c_str(); }
+
     /**
 	 * Set the minimum threshold for detection.
 	 */
@@ -256,7 +330,13 @@ protected:
 			 float threshold, const char* input, const char* output,  
              uint32_t maxBatchSize, 
 			 precisionType precision, deviceType device, bool allowGPUFallback );
-	
+
+	bool preProcess( void* input, uint32_t width, uint32_t height, imageFormat format );
+	int postProcess( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections );
+
+	void scaleCoordinates( Detection* detections, int numDetections, uint32_t originalWidth, uint32_t originalHeight );
+	int applyNMS( Detection* detections, int numDetections, float iouThreshold = 0.45f );
+
 	int clusterDetections( Detection* detections, int n );
 	void sortDetections( Detection* detections, int numDetections );
 
@@ -282,6 +362,8 @@ protected:
 	uint32_t	 mMaxDetections;	// number of raw detections in the grid
 
 	static const uint32_t mNumDetectionSets = 16; // size of detection ringbuffer
+
+	LetterboxInfo mLastLetterboxInfo;
 
 };
 
