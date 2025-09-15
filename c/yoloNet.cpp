@@ -35,6 +35,8 @@
 #include "filesystem.h"
 #include "logging.h"
 
+#include "imageIO.h"
+
 #define CHECK_NULL_STR(x)	(x != NULL) ? x : "NULL"
 
 // constructor
@@ -254,65 +256,78 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 	return numDetections;
 }
 
-// from yolonet.cu
-cudaError_t cudaLetterbox(void* input, imageFormat input_format, 
-                         uint32_t input_width, uint32_t input_height,
-                         void* output, imageFormat output_format,
-                         uint32_t output_width, uint32_t output_height,
-                         const float3& pad_color,
-                         yoloNet::LetterboxInfo* info,
-                         cudaStream_t stream);
+// letterbox function
+bool Letterbox(cv::Mat& input, uint32_t input_width, uint32_t input_height, imageFormat input_format, cv::Mat& output, yoloNet::PreParam* pparam, uint32_t model_width, uint32_t model_height)
+{
+	const float inp_w = model_width;
+	const float inp_h = model_height;
+
+    float r    = std::min(inp_h / input_height, inp_w / input_width);
+    int   padw = std::round(input_width * r);
+    int   padh = std::round(input_height * r);
+
+    cv::Mat tmp;
+    if ((int)input_width != padw || (int)input_height != padh) {
+        cv::resize(input, tmp, cv::Size(padw, padh));
+    }
+    else {
+        tmp = input.clone();
+    }
+
+    float dw = inp_w - padw;
+    float dh = inp_h - padh;
+
+    dw /= 2.0f;
+    dh /= 2.0f;
+    int top    = int(std::round(dh - 0.1f));
+    int bottom = int(std::round(dh + 0.1f));
+    int left   = int(std::round(dw - 0.1f));
+    int right  = int(std::round(dw + 0.1f));
+
+    cv::copyMakeBorder(tmp, tmp, top, bottom, left, right, cv::BORDER_CONSTANT, {114, 114, 114});
+
+    cv::dnn::blobFromImage(tmp, output, 1 / 255.f, cv::Size(), cv::Scalar(0, 0, 0), true, false, CV_32F);
+
+    pparam->ratio  = 1 / r;
+    pparam->dw     = dw;
+    pparam->dh     = dh;
+    pparam->height = input_height;
+    pparam->width  = input_width;
+
+    return true;
+}
 
 // preProcess
 bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFormat format )
 {
 	PROFILER_BEGIN(PROFILER_PREPROCESS);
 
-    const uint32_t modelWidth = GetInputWidth();
-    const uint32_t modelHeight = GetInputHeight();
-
-    const size_t channels =imageFormatChannels(format);
-    const size_t letterboxSize = modelWidth * modelHeight * channels * sizeof(uint8_t);
-
-    void* letterboxBuffer = nullptr;
-
-    if( CUDA_FAILED(cudaMalloc(&letterboxBuffer, letterboxSize)) ) 
-	{
-		LogError(LOG_TRT "yoloNet::preProcess() -- failed to allocate letterbox buffer\n");
-
-		return false;
+	cv::Mat inputMat;
+	if (format == IMAGE_RGB8) {
+		inputMat = cv::Mat(height, width, CV_8UC3, input);
+	} else {
+		LogError("Unsupported format for cv::Mat conversion\n");
+      return false;
 	}
 
+	cv::Mat nchw;
 
-    if( CUDA_FAILED(cudaLetterbox(input, format, width, height, letterboxBuffer, format, modelWidth, modelHeight, make_float3(114.0f, 114.0f, 114.0f), &mLastLetterboxInfo, GetStream())) )
+	Letterbox(inputMat, width, height, format, nchw, &mPreParam, GetInputWidth(), GetInputHeight());
+
+    if (CUDA_FAILED(cudaMemcpyAsync(mInputs[0].CUDA, nchw.data, nchw.total() * nchw.elemSize(), cudaMemcpyHostToDevice, GetStream()))) 
 	{
-			LogError(LOG_TRT "yoloNet::preProcess() -- cudaLetterbox() failed\n");
-			cudaFree(letterboxBuffer);
-			return false;
-	}
+		LogError(LOG_TRT "yoloNet::preProcess() -- failed to copy nchw data to GPU\n");
+      	return false;
+  	}
 
 
-	if( IsModelType(MODEL_ONNX) )
-	{
-
-        if( CUDA_FAILED(cudaTensorNormRGB(letterboxBuffer, format, modelWidth, modelHeight, mInputs[0].CUDA, modelWidth, modelHeight,  make_float2(0.0f, 1.0f), GetStream())) )
-		{
-				LogError(LOG_TRT "yoloNet::preProcess() -- cudaTensorNormRGB() failed\n");
-				cudaFree(letterboxBuffer);
-				return false;
-		}
-	}
-
-
-	cudaFree(letterboxBuffer);
-
-	PROFILER_END(PROFILER_PREPROCESS);
-	return true;
+    PROFILER_END(PROFILER_PREPROCESS);
+    return true;
 }
 
 
-// postProcess (detectNet 스타일)
-int yoloNet::postProcess( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections )
+// postProcess
+int yoloNet::postProcess( Detection* detections )
 {
 	PROFILER_BEGIN(PROFILER_POSTPROCESS);
 
@@ -323,18 +338,12 @@ int yoloNet::postProcess( void* input, uint32_t width, uint32_t height, imageFor
 	const uint32_t numAnchors = DIMS_W(mOutputs[0].dims);  // 8400
 	const uint32_t numChannels = DIMS_H(mOutputs[0].dims); // 60
 
-	// YOLO format: [x, y, w, h, objectness, class0, class1, ..., classN]
-	const uint32_t numClasses = numChannels - 5; // 55 classes
+	// YOLO format: [x, y, w, h, class0, class1, ..., classN]
+	const uint32_t numClasses = numChannels - 4; // 55 classes
 
 	for( uint32_t n = 0; n < numAnchors; n++)
 	{
 		const float* anchor = &output[n * numChannels];
-
-		const float objectness = anchor[4];
-
-		// Python YOLO uses 0.25 as initial threshold
-		if( objectness < 0.25f )
-			continue;
 
 		// Find max class probability
 		float maxClassProb = 0.0f;
@@ -350,10 +359,9 @@ int yoloNet::postProcess( void* input, uint32_t width, uint32_t height, imageFor
 			}
 		}
 
-		// Python YOLO: combined confidence
-		const float confidence = objectness * maxClassProb;
+		const float objectness = 1.0f / (1.0f + expf(-maxClassProb));
 
-		if( confidence < mConfidenceThreshold )
+		if( objectness < mConfidenceThreshold )
 			continue;
 
 		// Convert YOLO format (center_x, center_y, w, h) to (x1, y1, x2, y2)
@@ -366,7 +374,7 @@ int yoloNet::postProcess( void* input, uint32_t width, uint32_t height, imageFor
 		const float h = anchor[3] * modelHeight;
 
 		detections[numDetections].ClassID = maxClass;
-		detections[numDetections].Confidence = confidence;
+		detections[numDetections].Confidence = maxClassProb;
 		detections[numDetections].Left = cx - w * 0.5f;
 		detections[numDetections].Right = cx + w * 0.5f;
 		detections[numDetections].Top = cy - h * 0.5f;

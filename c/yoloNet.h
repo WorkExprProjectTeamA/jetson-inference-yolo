@@ -25,6 +25,7 @@
 
 
 #include "tensorNet.h"
+#include "opencv2/opencv.hpp"
 
 /**
  * Name of default input blob for YOLO model.
@@ -42,7 +43,7 @@
  * Default value of the minimum detection threshold
  * @ingroup yoloNet
  */
-#define YOLONET_DEFAULT_CONFIDENCE_THRESHOLD 0.5f
+#define YOLONET_DEFAULT_CONFIDENCE_THRESHOLD 0.25f
 
 /**
  * Default value of the clustering area-of-overlap threshold
@@ -207,13 +208,13 @@ public:
 	/**
 	 * Letterbox for pre/post processing
 	*/
-	struct LetterboxInfo {
-          float scale;
-          int pad_x;
-          int pad_y;
-          int new_width;
-          int new_height;
-    };
+	struct PreParam {
+		float ratio  = 1.0f;
+		float dw     = 0.0f;
+		float dh     = 0.0f;
+		float height = 0;
+		float width  = 0;
+	};
 
 	/**
 	 * Parse a string sequence into OverlayFlags enum.
@@ -363,7 +364,7 @@ protected:
 
 	static const uint32_t mNumDetectionSets = 16; // size of detection ringbuffer
 
-	LetterboxInfo mLastLetterboxInfo;
+	PreParam mPreParam;
 
 };
 
