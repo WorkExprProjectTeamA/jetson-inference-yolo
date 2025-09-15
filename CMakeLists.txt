@@ -86,7 +86,7 @@ endif()
 
 # OpenCV used for findHomography() and decomposeHomography()
 # OpenCV version >= 3.0.0 required for decomposeHomography()
-find_package(OpenCV COMPONENTS core calib3d)
+find_package(OpenCV COMPONENTS core calib3d imgproc dnn)
 
 if( NOT OpenCV_FOUND )
 	message("-- didn't find OpenCV on system, disabling OpenCV")
@@ -205,7 +205,7 @@ endif()
 
 if(HAS_OPENCV) 
    message("-- linking jetson-inference-yolo with OpenCV " ${OpenCV_VERSION})
-   target_link_libraries(jetson-inference-yolo opencv_core opencv_calib3d)
+   target_link_libraries(jetson-inference-yolo opencv_core opencv_calib3d opencv_imgproc opencv_dnn)
 endif()
 
 if(HAS_VPI) 

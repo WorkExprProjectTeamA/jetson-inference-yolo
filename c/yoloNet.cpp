@@ -240,7 +240,7 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 	PROFILER_END(PROFILER_NETWORK);
 	
 	// post-processing / clustering
-	const int numDetections = postProcess(input, width, height, format, detections);
+	const int numDetections = postProcess(detections);
 
 	// render the overlay
 	if( overlay != 0 && numDetections > 0 )
@@ -333,137 +333,68 @@ int yoloNet::postProcess( Detection* detections )
 
 	int numDetections = 0;
 
-	float* output = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
+	float* output_host_ptr = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
 
 	const uint32_t numAnchors = DIMS_W(mOutputs[0].dims);  // 8400
 	const uint32_t numChannels = DIMS_H(mOutputs[0].dims); // 60
+	const uint32_t numClasses = numChannels - 4;
 
-	// YOLO format: [x, y, w, h, class0, class1, ..., classN]
-	const uint32_t numClasses = numChannels - 4; // 55 classes
+	std::vector<cv::Rect> bboxes;
+    std::vector<float>    scores;
+    std::vector<int>      labels;
+    std::vector<int>      indices;
 
-	for( uint32_t n = 0; n < numAnchors; n++)
-	{
-		const float* anchor = &output[n * numChannels];
+	cv::Mat output = cv::Mat(numChannels, numAnchors, CV_32F, output_host_ptr);
+    output         = output.t();
 
-		// Find max class probability
-		float maxClassProb = 0.0f;
-		uint32_t maxClass = 0;
+	for (int i = 0; i < numAnchors; i++) {
+        auto  row_ptr    = output.row(i).ptr<float>();
+        auto  bboxes_ptr = row_ptr;
+        auto  scores_ptr = row_ptr + 4;
+        auto  max_s_ptr  = std::max_element(scores_ptr, scores_ptr + numClasses);
+        float score      = *max_s_ptr;
+        if (score > YOLONET_SCORE_THRESHOLD) {
+            float x = *bboxes_ptr++ - mPreParam.dw;
+            float y = *bboxes_ptr++ - mPreParam.dh;
+            float w = *bboxes_ptr++;
+            float h = *bboxes_ptr;
 
-		for( uint32_t c = 0; c < numClasses; c++ )
-		{
-			const float classProb = anchor[5 + c];
-			if( classProb > maxClassProb )
-			{
-				maxClassProb = classProb;
-				maxClass = c;
-			}
-		}
+            float x0 = clamp((x - 0.5f * w) * mPreParam.ratio, 0.f, mPreParam.width);
+            float y0 = clamp((y - 0.5f * h) * mPreParam.ratio, 0.f, mPreParam.height);
+            float x1 = clamp((x + 0.5f * w) * mPreParam.ratio, 0.f, mPreParam.width);
+            float y1 = clamp((y + 0.5f * h) * mPreParam.ratio, 0.f, mPreParam.height);
 
-		const float objectness = 1.0f / (1.0f + expf(-maxClassProb));
+            int              label = max_s_ptr - scores_ptr;
+            cv::Rect_<float> bbox;
+            bbox.x      = x0;
+            bbox.y      = y0;
+            bbox.width  = x1 - x0;
+            bbox.height = y1 - y0;
 
-		if( objectness < mConfidenceThreshold )
-			continue;
+            bboxes.push_back(bbox);
+            labels.push_back(label);
+            scores.push_back(score);
+        }
+	}
 
-		// Convert YOLO format (center_x, center_y, w, h) to (x1, y1, x2, y2)
-		const float modelWidth = GetInputWidth();
-		const float modelHeight = GetInputHeight();
+	cv::dnn::NMSBoxesBatched(bboxes, scores, labels, YOLONET_SCORE_THRESHOLD, YOLONET_IOU_THRESHOLD, indices);
 
-		const float cx = anchor[0] * modelWidth;
-		const float cy = anchor[1] * modelHeight;
-		const float w = anchor[2] * modelWidth;
-		const float h = anchor[3] * modelHeight;
-
-		detections[numDetections].ClassID = maxClass;
-		detections[numDetections].Confidence = maxClassProb;
-		detections[numDetections].Left = cx - w * 0.5f;
-		detections[numDetections].Right = cx + w * 0.5f;
-		detections[numDetections].Top = cy - h * 0.5f;
-		detections[numDetections].Bottom = cy + h * 0.5f;
-
-		numDetections++;
-
-		if( numDetections >= mMaxDetections)
-			break;
+    for (auto& i : indices) {
+        if (numDetections >= YOLONET_TOPK) {
+            break;
+        }
+        detections[numDetections].ClassID = labels[i];
+		detections[numDetections].Confidence = scores[i];
+		detections[numDetections].Left = bboxes[i].x;
+		detections[numDetections].Right = bboxes[i].x + bboxes[i].width;
+		detections[numDetections].Top = bboxes[i].y;
+		detections[numDetections].Bottom = bboxes[i].y + bboxes[i].height;
+        numDetections += 1;
     }
-
-    // Scale coordinates back to original image (letterbox → original)
-    scaleCoordinates(detections, numDetections, width, height);
-
-    // Apply NMS (Python YOLO style)
-    numDetections = applyNMS(detections, numDetections, 0.45f);
-
-    // Sort by confidence (detectNet 스타일)
-    if( numDetections > 1 )
-        sortDetections(detections, numDetections);
 
     PROFILER_END(PROFILER_POSTPROCESS);
     
 	return numDetections;
-}
-
-// Scale coordinates from letterbox to original image
-void yoloNet::scaleCoordinates( Detection* detections, int numDetections, uint32_t originalWidth, uint32_t originalHeight )
-{
-	for( int i = 0; i < numDetections; i++ )
-	{
-		// Remove padding
-		detections[i].Left -= mLastLetterboxInfo.pad_x;
-		detections[i].Right -= mLastLetterboxInfo.pad_x;
-		detections[i].Top -= mLastLetterboxInfo.pad_y;
-		detections[i].Bottom -= mLastLetterboxInfo.pad_y;
-
-		// Scale back to original
-		detections[i].Left /= mLastLetterboxInfo.scale;
-		detections[i].Right /= mLastLetterboxInfo.scale;
-		detections[i].Top /= mLastLetterboxInfo.scale;
-		detections[i].Bottom /= mLastLetterboxInfo.scale;
-
-		// Clip to image boundaries
-		detections[i].Left = fmaxf(0.0f, fminf((float)originalWidth, detections[i].Left));
-		detections[i].Right = fmaxf(0.0f, fminf((float)originalWidth, detections[i].Right));
-		detections[i].Top = fmaxf(0.0f, fminf((float)originalHeight, detections[i].Top));
-		detections[i].Bottom = fmaxf(0.0f, fminf((float)originalHeight, detections[i].Bottom));
-	}
-}
-
-int yoloNet::applyNMS( Detection* detections, int numDetections, float iouThreshold )
-{
-	if( numDetections <= 1 )
-		return numDetections;
-
-	// Sort by confidence (highest first)
-	std::sort(detections, detections + numDetections, 
-			[](const Detection& a, const Detection& b) 
-			{
-				return a.Confidence > b.Confidence;
-			});
-
-	std::vector<bool> suppressed(numDetections, false);
-	int kept = 0;
-
-	for( int i = 0; i < numDetections; i++)
-	{
-		if( suppressed[i] )
-			continue;
-
-		// Keep this detection
-		if( kept != i )
-			detections[kept] = detections[i];
-		kept++;
-
-		// Suppress overlapping detections
-		for( int j = i + 1; j < numDetections; j++ )
-		{
-			if( suppressed[j] )
-				continue;
-
-			float iou = detections[i].IOU(detections[j]);
-			if( iou > iouThreshold )
-				suppressed[j] = true;
-		}
-	}
-
-	return kept;
 }
 
 // sortDetections (by area)

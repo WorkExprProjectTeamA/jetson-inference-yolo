@@ -58,6 +58,11 @@
  */
 #define YOLONET_DEFAULT_THRESHOLD  YOLONET_DEFAULT_CONFIDENCE_THRESHOLD
 
+
+#define YOLONET_IOU_THRESHOLD 0.65f
+#define YOLONET_SCORE_THRESHOLD 0.25f
+#define YOLONET_TOPK 100
+
 /**
  * Default alpha blending value used during overlay
  * @ingroup yoloNet
@@ -333,13 +338,15 @@ protected:
 			 precisionType precision, deviceType device, bool allowGPUFallback );
 
 	bool preProcess( void* input, uint32_t width, uint32_t height, imageFormat format );
-	int postProcess( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections );
+	int postProcess( Detection* detections );
 
 	void scaleCoordinates( Detection* detections, int numDetections, uint32_t originalWidth, uint32_t originalHeight );
 	int applyNMS( Detection* detections, int numDetections, float iouThreshold = 0.45f );
 
 	int clusterDetections( Detection* detections, int n );
 	void sortDetections( Detection* detections, int numDetections );
+
+	inline static float clamp(float val, float min, float max) { return val > min ? (val < max ? val : max) : min; }
 
 	objectTracker* mTracker;
 	
