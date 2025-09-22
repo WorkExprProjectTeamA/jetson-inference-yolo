@@ -3,7 +3,7 @@
 #add_subdirectory(depthnet)
 add_subdirectory(detectnet)
 #add_subdirectory(posenet)
-add_subdirectory(segnet)
+#add_subdirectory(segnet)
 #add_subdirectory(actionnet)
 #add_subdirectory(backgroundnet)
 add_subdirectory(yolonet)

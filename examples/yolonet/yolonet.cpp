@@ -42,7 +42,7 @@ void sig_handler(int signo)
 
 int usage()
 {
-	printf("usage: detectnet [--help] [--network=NETWORK] [--threshold=THRESHOLD] ...\n");
+	printf("usage: yolonet [--help] [--network=NETWORK] [--threshold=THRESHOLD] ...\n");
 	printf("                 input [output]\n\n");
 	printf("Locate objects in a video/image stream using an object detection DNN.\n");
 	printf("See below for additional arguments that may not be shown above.\n\n");
@@ -85,7 +85,7 @@ int main( int argc, char** argv )
 
 	if( !input )
 	{
-		LogError("detectnet:  failed to create input stream\n");
+		LogError("yolonet:  failed to create input stream\n");
 		return 1;
 	}
 
@@ -97,7 +97,7 @@ int main( int argc, char** argv )
 	
 	if( !output )
 	{
-		LogError("detectnet:  failed to create output stream\n");	
+		LogError("yolonet:  failed to create output stream\n");	
 		return 1;
 	}
 	
@@ -107,7 +107,7 @@ int main( int argc, char** argv )
 	
 	if( !net )
 	{
-		LogError("detectnet:  failed to load detectNet model\n");
+		LogError("yolonet:  failed to load yoloNet model\n");
 		return 1;
 	}
 
@@ -174,13 +174,14 @@ int main( int argc, char** argv )
 	/*
 	 * destroy resources
 	 */
-	LogVerbose("detectnet:  shutting down...\n");
+	LogVerbose("yolonet:  shutting down...\n");
 	
 	SAFE_DELETE(input);
 	SAFE_DELETE(output);
 	SAFE_DELETE(net);
 
-	LogVerbose("detectnet:  shutdown complete.\n");
+	LogVerbose("yolonet:  shutdown complete.\n");
+
 	return 0;
 }
 

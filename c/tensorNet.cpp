@@ -1657,12 +1657,12 @@ bool tensorNet::LoadEngine( nvinfer1::ICudaEngine* engine,
 		void* outputCPU  = NULL;
 		void* outputCUDA = NULL;
 		
-		//if( CUDA_FAILED(cudaMalloc((void**)&outputCUDA, outputSize)) )
-		if( !cudaAllocMapped((void**)&outputCPU, (void**)&outputCUDA, outputSize) )
+		if( CUDA_FAILED(cudaMalloc((void**)&outputCUDA, outputSize)) )
 		{
 			LogError(LOG_TRT "failed to alloc CUDA mapped memory for tensor output, %zu bytes\n", outputSize);
 			return false;
 		}
+		CUDA(cudaMemset(outputCUDA, 0, outputSize));
 	
     #if NV_TENSORRT_MAJOR >= 10
         //if( !mContext->setTensorAddress(output_blobs[n].c_str(), outputCUDA) )
@@ -1737,7 +1737,7 @@ bool tensorNet::LoadEngine( nvinfer1::ICudaEngine* engine,
 	mEngine  = engine;
 	mDevice  = device;
 	mContext = context;
-	
+
 	SetStream(stream);	// set default device stream
 
 	return true;

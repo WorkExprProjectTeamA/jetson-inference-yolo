@@ -148,7 +148,7 @@ yoloNet* yoloNet::Create( const char* prototxt, const char* model, float mean_pi
 // allocDetections
 bool yoloNet::allocDetections()
 {
-	mNumClasses = DIMS_H(mOutputs[0].dims) - 5;
+	mNumClasses = DIMS_H(mOutputs[0].dims) - 4;
 	mMaxDetections = DIMS_W(mOutputs[0].dims) /** mNumClasses*/;
 	LogInfo(LOG_TRT "yoloNet -- number of object classes: %u\n", mNumClasses);
 
@@ -227,19 +227,12 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 		return false;
 	}
 	
-	// apply input pre-processing
 	if( !preProcess(input, width, height, format) )
 		return -1;
-	
-	// process model with TensorRT 
-	PROFILER_BEGIN(PROFILER_NETWORK);
 
 	if( !ProcessNetwork() )
 		return -1;
-	
-	PROFILER_END(PROFILER_NETWORK);
-	
-	// post-processing / clustering
+
 	const int numDetections = postProcess(detections);
 
 	// render the overlay
@@ -314,7 +307,7 @@ bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFor
 
 	Letterbox(inputMat, width, height, format, nchw, &mPreParam, GetInputWidth(), GetInputHeight());
 
-    if (CUDA_FAILED(cudaMemcpyAsync(mInputs[0].CUDA, nchw.data, nchw.total() * nchw.elemSize(), cudaMemcpyHostToDevice, GetStream()))) 
+    if (CUDA_FAILED(cudaMemcpy(mInputs[0].CUDA, nchw.data, nchw.total() * nchw.elemSize(), cudaMemcpyHostToDevice))) 
 	{
 		LogError(LOG_TRT "yoloNet::preProcess() -- failed to copy nchw data to GPU\n");
       	return false;
@@ -332,6 +325,10 @@ int yoloNet::postProcess( Detection* detections )
 	PROFILER_BEGIN(PROFILER_POSTPROCESS);
 
 	int numDetections = 0;
+
+	mOutputs[0].CPU = (float*)malloc(mOutputs[0].size);
+
+	CUDA(cudaMemcpy(mOutputs[0].CPU, mOutputs[0].CUDA, mOutputs[0].size, cudaMemcpyDeviceToHost));
 
 	float* output_host_ptr = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
 

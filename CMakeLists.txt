@@ -208,7 +208,7 @@ if(HAS_OPENCV)
    target_link_libraries(jetson-inference-yolo opencv_core opencv_calib3d opencv_imgproc opencv_dnn)
 endif()
 
-if(HAS_VPI) 
+if(HAS_VPI)
    message("-- linking jetson-inference-yolo with VPI " ${VPI_VERSION})
    target_link_libraries(jetson-inference-yolo vpi)
 endif()
