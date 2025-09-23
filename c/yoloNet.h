@@ -26,6 +26,8 @@
 
 #include "tensorNet.h"
 #include "opencv2/opencv.hpp"
+#include <string>
+#include <unordered_set>
 
 /**
  * Name of default input blob for YOLO model.
@@ -338,7 +340,7 @@ protected:
 			 precisionType precision, deviceType device, bool allowGPUFallback );
 
 	bool preProcess( void* input, uint32_t width, uint32_t height, imageFormat format );
-	int postProcess( Detection* detections );
+	std::vector<int> postProcess( Detection* detections );
 
 	void scaleCoordinates( Detection* detections, int numDetections, uint32_t originalWidth, uint32_t originalHeight );
 	int applyNMS( Detection* detections, int numDetections, float iouThreshold = 0.45f );
@@ -372,6 +374,10 @@ protected:
 	static const uint32_t mNumDetectionSets = 16; // size of detection ringbuffer
 
 	PreParam mPreParam;
+
+	std::unordered_set<int> mAlertClasses = {
+		1,7,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55
+  	};
 
 };
 
