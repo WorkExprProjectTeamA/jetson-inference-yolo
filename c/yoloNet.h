@@ -265,7 +265,7 @@ public:
 	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
 	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
 	 */
-	template<typename T> std::vector<int> Detect( T* image, uint32_t width, uint32_t height, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT )		{ return Detect((void*)image, width, height, imageFormatFromType<T>(), detections, overlay); }
+	template<typename T> int Detect( T* image, uint32_t width, uint32_t height, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT )		{ return Detect((void*)image, width, height, imageFormatFromType<T>(), detections, overlay); }
 
 	/**
 	 * Detect object locations from an image, returning an array containing the detection results.
@@ -276,7 +276,7 @@ public:
 	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
 	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
 	 */
-	std::vector<int> Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT );
+	int Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT );
 
 	/**
 	 * Detect object locations from an image, into an array of the results allocated by the user.
@@ -288,7 +288,7 @@ public:
 	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
 	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
 	 */
-	std::vector<int> Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay=OVERLAY_DEFAULT );
+	int Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay=OVERLAY_DEFAULT );
 	
 	/**
 	 * Draw the detected bounding boxes overlayed on an RGBA image.
@@ -340,7 +340,7 @@ protected:
 			 precisionType precision, deviceType device, bool allowGPUFallback );
 
 	bool preProcess( void* input, uint32_t width, uint32_t height, imageFormat format );
-	std::vector<int> postProcess( Detection* detections );
+	int postProcess( Detection* detections );
 
 	void scaleCoordinates( Detection* detections, int numDetections, uint32_t originalWidth, uint32_t originalHeight );
 	int applyNMS( Detection* detections, int numDetections, float iouThreshold = 0.45f );
@@ -374,10 +374,6 @@ protected:
 	static const uint32_t mNumDetectionSets = 16; // size of detection ringbuffer
 
 	PreParam mPreParam;
-
-	std::unordered_set<int> mAlertClasses = {
-		1,7,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55
-  	};
 
 };
 

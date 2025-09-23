@@ -189,8 +189,7 @@ bool yoloNet::loadClassColors( const char* filename )
 	return LoadClassColors(filename, &mClassColors, mNumClasses, YOLONET_DEFAULT_ALPHA);
 }
 
-
-std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay )
+int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay )
 {
 	Detection* det = mDetectionSets + mDetectionSet * GetMaxDetections();
 
@@ -207,7 +206,7 @@ std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, 
 
 
 // Detect
-std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay )
+int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay )
 {
 	// verify parameters
 	if( !input || width == 0 || height == 0 || !detections )
@@ -234,12 +233,11 @@ std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, 
 	if( !ProcessNetwork() )
 		return {};
 
-	std::vector<int> totalDetections = postProcess(detections);
-	const int numDetections = totalDetections[0];	// number of total detected object
-	const int numAlerts = totalDetections[1];
+	int numDetections = postProcess(detections);
+
 
 	// render the overlay
-	if( overlay != 0 && numAlerts > 0 )
+	if( overlay != 0 )
 	{
 		if( !Overlay(input, input, width, height, format, detections, numDetections, overlay) )
 			LogError(LOG_TRT "detectNet::Detect() -- failed to render overlay\n");
@@ -249,7 +247,7 @@ std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, 
 	//CUDA(cudaDeviceSynchronize());	// BUG is this needed here?
 
 	// return the number of detections
-	return totalDetections;
+	return numDetections;
 }
 
 // letterbox function
@@ -323,12 +321,11 @@ bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFor
 
 
 // postProcess
-std::vector<int> yoloNet::postProcess( Detection* detections )
+int yoloNet::postProcess( Detection* detections )
 {
 	PROFILER_BEGIN(PROFILER_POSTPROCESS);
 
 	int numDetections = 0;
-	int numAlerts = 0;
 
 	mOutputs[0].CPU = (float*)malloc(mOutputs[0].size);
 
@@ -391,19 +388,12 @@ std::vector<int> yoloNet::postProcess( Detection* detections )
 		detections[numDetections].Top = bboxes[i].y;
 		detections[numDetections].Bottom = bboxes[i].y + bboxes[i].height;
 
-		if (mAlertClasses.find(labels[i]) != mAlertClasses.end()) {
-			numAlerts += 1;
-		}
         numDetections += 1;
     }
 
     PROFILER_END(PROFILER_POSTPROCESS);
-    
-	std::vector<int> totalDetections;
-	totalDetections.push_back(numDetections);
-	totalDetections.push_back(numAlerts);
 
-	return totalDetections;
+	return numDetections;
 }
 
 // sortDetections (by area)
