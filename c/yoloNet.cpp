@@ -190,7 +190,7 @@ bool yoloNet::loadClassColors( const char* filename )
 }
 
 
-int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay )
+std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay )
 {
 	Detection* det = mDetectionSets + mDetectionSet * GetMaxDetections();
 
@@ -207,13 +207,13 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 
 
 // Detect
-int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay )
+std::vector<int> yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay )
 {
 	// verify parameters
 	if( !input || width == 0 || height == 0 || !detections )
 	{
 		LogError(LOG_TRT "detectNet::Detect( 0x%p, %u, %u ) -> invalid parameters\n", input, width, height);
-		return -1;
+		return {};
 	}
 	
 	if( !imageFormatIsRGB(format) )
@@ -225,17 +225,17 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 		LogError(LOG_TRT "                          * rgb32f\n");		
 		LogError(LOG_TRT "                          * rgba32f\n");
 
-		return false;
+		return {};
 	}
 	
 	if( !preProcess(input, width, height, format) )
-		return -1;
+		return {};
 
 	if( !ProcessNetwork() )
-		return -1;
+		return {};
 
 	std::vector<int> totalDetections = postProcess(detections);
-	const int numDetections = totalDetections[0];
+	const int numDetections = totalDetections[0];	// number of total detected object
 	const int numAlerts = totalDetections[1];
 
 	// render the overlay
@@ -249,7 +249,7 @@ int yoloNet::Detect( void* input, uint32_t width, uint32_t height, imageFormat f
 	//CUDA(cudaDeviceSynchronize());	// BUG is this needed here?
 
 	// return the number of detections
-	return numDetections;
+	return totalDetections;
 }
 
 // letterbox function

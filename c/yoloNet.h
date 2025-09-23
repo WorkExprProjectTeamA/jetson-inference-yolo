@@ -265,7 +265,7 @@ public:
 	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
 	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
 	 */
-	template<typename T> int Detect( T* image, uint32_t width, uint32_t height, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT )		{ return Detect((void*)image, width, height, imageFormatFromType<T>(), detections, overlay); }
+	template<typename T> std::vector<int> Detect( T* image, uint32_t width, uint32_t height, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT )		{ return Detect((void*)image, width, height, imageFormatFromType<T>(), detections, overlay); }
 
 	/**
 	 * Detect object locations from an image, returning an array containing the detection results.
@@ -276,7 +276,7 @@ public:
 	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
 	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
 	 */
-	int Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT );
+	std::vector<int> Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection** detections, uint32_t overlay=OVERLAY_DEFAULT );
 
 	/**
 	 * Detect object locations from an image, into an array of the results allocated by the user.
@@ -288,7 +288,7 @@ public:
 	 * @param[in]  overlay bitwise OR combination of overlay flags (@see OverlayFlags and @see Overlay()), or OVERLAY_NONE.
 	 * @returns    The number of detected objects, 0 if there were no detected objects, and -1 if an error was encountered.
 	 */
-	int Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay=OVERLAY_DEFAULT );
+	std::vector<int> Detect( void* input, uint32_t width, uint32_t height, imageFormat format, Detection* detections, uint32_t overlay=OVERLAY_DEFAULT );
 	
 	/**
 	 * Draw the detected bounding boxes overlayed on an RGBA image.

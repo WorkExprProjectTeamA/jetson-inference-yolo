@@ -28,7 +28,6 @@
 
 #include <signal.h>
 
-
 bool signal_recieved = false;
 
 void sig_handler(int signo)
@@ -107,13 +106,32 @@ int main( int argc, char** argv )
 	
 	if( !net )
 	{
-		LogError("yolonet:  failed to load yoloNet model\n");
+		LogError("detectnet:  failed to load detectNet model\n");
 		return 1;
 	}
 
 	// parse overlay flags
 	const uint32_t overlayFlags = yoloNet::OverlayFlagsFromStr(cmdLine.GetString("overlay", "box,labels,conf"));
-	
+
+
+	// // HTTP 클라이언트 초기화
+	// AlertSender alertSender("http://localhost:8080");
+
+	// // MQTT 클라이언트 초기화
+	// MqttHeartbeatSender mqttSender("tcp://localhost:1883", "jetson_client", "heartbeat/data");
+	// if (!mqttSender.connect()) {
+    // 	LogError("MQTT 연결 실패, heartbeat 기능 비활성화\n");
+	// }
+
+	// // 5분마다 heartbeat 전송하는 스레드 시작
+	// std::thread heartbeatThread([&mqttSender]() {
+    // 	while (!signal_recieved) {
+    //     	std::this_thread::sleep_for(std::chrono::minutes(5));
+    //     	mqttSender.sendHeartbeat();
+    // 	}
+	// });
+	// heartbeatThread.detach();
+
 
 	/*
 	 * processing loop
@@ -134,8 +152,14 @@ int main( int argc, char** argv )
 
 		// detect objects in the frame
 		yoloNet::Detection* detections = NULL;
-	
-		const int numDetections = net->Detect(image, input->GetWidth(), input->GetHeight(), &detections, overlayFlags);
+
+		// // 프레임 처리 기록
+		// MqttHeartbeatSender::recordFrame();
+
+		const std::vector<int> totalDetections = net->Detect(image, input->GetWidth(), input->GetHeight(), &detections, overlayFlags);
+
+		const int numDetections = totalDetections[0];	// number of total detected object
+		const int numAlerts = totalDetections[1];
 		
 		if( numDetections > 0 )
 		{
@@ -150,6 +174,37 @@ int main( int argc, char** argv )
 					LogVerbose("tracking  ID %i  status=%i  frames=%i  lost=%i\n", detections[n].TrackID, detections[n].TrackStatus, detections[n].TrackFrames, detections[n].TrackLost);
 			}
 		}	
+
+
+
+		// //추가 (위에꺼 교체)
+		// if( numDetections > 0 )
+		// {
+		// 	// 객체 감지 성공 기록
+		// 	MqttHeartbeatSender::recordDetection();
+
+		// 	LogVerbose("%i objects detected\n", numDetections);
+
+		// 	if (numAlerts > 0) {
+		// 		// 현재 프레임을 이미지로 저장
+		// 		std::string imagePath = saveCurrentFrame(image, input->GetWidth(), input->GetHeight());
+
+		// 		// 서버에 알림 전송
+		// 		std::thread([&alertSender, imagePath]() {
+		// 			alertSender.sendAlert(1, imagePath);
+		// 		}).detach();
+		// 	}
+
+		// 	for( int n=0; n < numDetections; n++ )
+		// 	{
+		// 		LogVerbose("\ndetected obj %i  class #%u (%s)  confidence=%f\n", n, detections[n].ClassID, net->GetClassDesc(detections[n].ClassID), detections[n].Confidence);
+		// 		LogVerbose("bounding box %i  (%.2f, %.2f)  (%.2f, %.2f)  w=%.2f  h=%.2f\n", n, detections[n].Left, detections[n].Top, detections[n].Right, detections[n].Bottom, detections[n].Width(), detections[n].Height()); 
+		
+		// 		if( detections[n].TrackID >= 0 )
+		// 			LogVerbose("tracking  ID %i  status=%i  frames=%i  lost=%i\n", detections[n].TrackID, detections[n].TrackStatus, detections[n].TrackFrames, detections[n].TrackLost);
+		// 	}
+		// }
+
 
 		// render outputs
 		if( output != NULL )
