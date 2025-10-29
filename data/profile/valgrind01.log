@@ -1,0 +1,527 @@
+==11417== Memcheck, a memory error detector
+==11417== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==11417== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==11417== Command: ./yolonet images/class46_1.jpg output.jpg
+==11417== Parent PID: 3339
+==11417== 
+==11417== Warning: set address range perms: large range [0x1f354000, 0x37407000) (noaccess)
+==11417== Warning: set address range perms: large range [0x1f360000, 0x37403000) (defined)
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x511C867: Log::ParseCmdLine(commandLine const&) (logging.cpp:43)
+==11417==    by 0x5117AAB: commandLine::commandLine(int, char**, char const*) (commandLine.cpp:100)
+==11417==    by 0x131F1B: main (yolonet.cpp:74)
+==11417==  Address 0x3fb29379 is 0 bytes after a block of size 9 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x511C867: Log::ParseCmdLine(commandLine const&) (logging.cpp:43)
+==11417==    by 0x5117AAB: commandLine::commandLine(int, char**, char const*) (commandLine.cpp:100)
+==11417==    by 0x131F1B: main (yolonet.cpp:74)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x511C8EF: Log::ParseCmdLine(commandLine const&) (logging.cpp:58)
+==11417==    by 0x5117AAB: commandLine::commandLine(int, char**, char const*) (commandLine.cpp:100)
+==11417==    by 0x131F1B: main (yolonet.cpp:74)
+==11417==  Address 0x3fb293c8 is 0 bytes after a block of size 8 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x511C8EF: Log::ParseCmdLine(commandLine const&) (logging.cpp:58)
+==11417==    by 0x5117AAB: commandLine::commandLine(int, char**, char const*) (commandLine.cpp:100)
+==11417==    by 0x131F1B: main (yolonet.cpp:74)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x511805B: commandLine::GetFlag(char const*, bool) const (commandLine.cpp:264)
+==11417==    by 0x51280EB: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:122)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb2941a is 0 bytes after a block of size 10 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x511805B: commandLine::GetFlag(char const*, bool) const (commandLine.cpp:264)
+==11417==    by 0x51280EB: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:122)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x5128343: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:155)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb297da is 0 bytes after a block of size 10 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x5128343: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:155)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x5117C9B: commandLine::GetInt(char const*, int, bool) const (commandLine.cpp:160)
+==11417==    by 0x5117D0F: commandLine::GetUnsignedInt(char const*, unsigned int, bool) const (commandLine.cpp:174)
+==11417==    by 0x5128467: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:174)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb2982b is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x5117C9B: commandLine::GetInt(char const*, int, bool) const (commandLine.cpp:160)
+==11417==    by 0x5117D0F: commandLine::GetUnsignedInt(char const*, unsigned int, bool) const (commandLine.cpp:174)
+==11417==    by 0x5128467: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:174)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x5117ECB: commandLine::GetFloat(char const*, float, bool) const (commandLine.cpp:226)
+==11417==    by 0x51285B3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:192)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb2991a is 0 bytes after a block of size 10 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x5117ECB: commandLine::GetFloat(char const*, float, bool) const (commandLine.cpp:226)
+==11417==    by 0x51285B3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:192)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512862F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:199)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb2996a is 0 bytes after a block of size 10 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512862F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:199)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512867F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:204)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb299c1 is 0 bytes after a block of size 17 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512867F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:204)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51286C3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:208)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29a1b is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51286C3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:208)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512870B: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:215)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29a6b is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512870B: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:215)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51287A3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:225)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29abd is 0 bytes after a block of size 13 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51287A3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:225)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x5117C9B: commandLine::GetInt(char const*, int, bool) const (commandLine.cpp:160)
+==11417==    by 0x512885F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:237)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29b0a is 0 bytes after a block of size 10 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x5117C9B: commandLine::GetInt(char const*, int, bool) const (commandLine.cpp:160)
+==11417==    by 0x512885F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:237)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51288FB: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:244)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29c0b is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51288FB: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:244)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512893F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:250)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29c57 is 0 bytes after a block of size 7 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512893F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:250)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x5128967: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:251)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417==  Address 0x3fb29ca8 is 0 bytes after a block of size 8 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x5128967: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:251)
+==11417==    by 0x512B343: videoSource::Create(char const*, commandLine const&, int, videoOptions const&) (videoSource.cpp:87)
+==11417==    by 0x512B4D3: videoSource::Create(commandLine const&, int) (videoSource.cpp:105)
+==11417==    by 0x131FAF: main (yolonet.cpp:90)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512835F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:156)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2ac3b is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512835F: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:156)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x5117ECB: commandLine::GetFloat(char const*, float, bool) const (commandLine.cpp:226)
+==11417==    by 0x51285D3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:193)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2ad7b is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x5117ECB: commandLine::GetFloat(char const*, float, bool) const (commandLine.cpp:226)
+==11417==    by 0x51285D3: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:193)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512864B: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:200)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2adcb is 0 bytes after a block of size 11 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512864B: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:200)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512869B: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:205)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2ae22 is 0 bytes after a block of size 18 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x512869B: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:205)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x5128727: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:216)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2aecc is 0 bytes after a block of size 12 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x5128727: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:216)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51287BF: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:226)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2af1e is 0 bytes after a block of size 14 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x51181B3: commandLine::GetString(char const*, char const*, bool) const (commandLine.cpp:300)
+==11417==    by 0x51287BF: videoOptions::Parse(char const*, commandLine const&, videoOptions::IoType, int) (videoOptions.cpp:226)
+==11417==    by 0x5129853: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:133)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Invalid write of size 1
+==11417==    at 0x486B3E8: strcpy (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179DB: strSwapDelimiter(char const*) (commandLine.cpp:77)
+==11417==    by 0x511805B: commandLine::GetFlag(char const*, bool) const (commandLine.cpp:264)
+==11417==    by 0x51293BB: createDisplaySubstream(videoOutput*, videoOptions&, commandLine const&) (videoOutput.cpp:52)
+==11417==    by 0x512992B: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:149)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417==  Address 0x3fb2b79a is 0 bytes after a block of size 10 alloc'd
+==11417==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==11417==    by 0x51179B7: strSwapDelimiter(char const*) (commandLine.cpp:72)
+==11417==    by 0x511805B: commandLine::GetFlag(char const*, bool) const (commandLine.cpp:264)
+==11417==    by 0x51293BB: createDisplaySubstream(videoOutput*, videoOptions&, commandLine const&) (videoOutput.cpp:52)
+==11417==    by 0x512992B: videoOutput::Create(char const*, commandLine const&, int, videoOptions const&) (videoOutput.cpp:149)
+==11417==    by 0x5129A6F: videoOutput::Create(commandLine const&, int) (videoOutput.cpp:164)
+==11417==    by 0x132007: main (yolonet.cpp:102)
+==11417== 
+==11417== Warning: set address range perms: large range [0x206000000, 0x3e2481000) (noaccess)
+==11417== Syscall param ioctl(TCGETA) points to unaddressable byte(s)
+==11417==    at 0x57CDD50: ioctl (ioctl.S:26)
+==11417==    by 0x3DB687A7: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libnvrm_gpu.so)
+==11417==    by 0x3DB6202B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libnvrm_gpu.so)
+==11417==    by 0x391FC7FB: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x391DF12B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x391E02AB: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x391E33D7: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x391EDD5B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x391EDEA3: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x39314F5B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x390ED7D7: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==    by 0x39126517: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==11417==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==11417== 
+==11417== Warning: noted but unhandled ioctl 0x4e04 with no size/direction hints.
+==11417==    This could cause spurious value errors to appear.
+==11417==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==11417== Conditional jump or move depends on uninitialised value(s)
+==11417==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA3B0F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA8CB7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAC8F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417== 
+==11417== Use of uninitialised value of size 8
+==11417==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA3B0F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA8CB7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAC8F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x4A33113: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==11417== 
+==11417== Conditional jump or move depends on uninitialised value(s)
+==11417==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA48FB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAC9B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x4A33113: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==11417== 
+==11417== Use of uninitialised value of size 8
+==11417==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA48FB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAC9B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x4A33113: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==11417==    by 0x4A31B9B: tensorNet::ProcessNetwork(bool) (tensorNet.cpp:1877)
+==11417== 
+==11417== Conditional jump or move depends on uninitialised value(s)
+==11417==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0BCB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x4A33113: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==11417==    by 0x4A31B9B: tensorNet::ProcessNetwork(bool) (tensorNet.cpp:1877)
+==11417== 
+==11417== Use of uninitialised value of size 8
+==11417==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0BCB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x4A33113: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==11417==    by 0x4A31B9B: tensorNet::ProcessNetwork(bool) (tensorNet.cpp:1877)
+==11417==    by 0x4A3CBCF: yoloNet::Detect(void*, unsigned int, unsigned int, imageFormat, yoloNet::Detection*, unsigned int) (yoloNet.cpp:233)
+==11417== 
+==11417== Conditional jump or move depends on uninitialised value(s)
+==11417==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7DC37CF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7DC274F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0BFF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417== 
+==11417== Use of uninitialised value of size 8
+==11417==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7DC37CF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7DC274F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0BFF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==11417==    by 0x4A33113: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==11417== 
+==11417== 
+==11417== HEAP SUMMARY:
+==11417==     in use at exit: 186,512,383 bytes in 52,664 blocks
+==11417==   total heap usage: 2,023,314 allocs, 1,970,650 frees, 3,037,873,028 bytes allocated
+==11417== 
+==11417== LEAK SUMMARY:
+==11417==    definitely lost: 17,028 bytes in 18 blocks
+==11417==    indirectly lost: 48 bytes in 6 blocks
+==11417==      possibly lost: 52,388,104 bytes in 103 blocks
+==11417==    still reachable: 134,009,243 bytes in 52,192 blocks
+==11417==         suppressed: 0 bytes in 0 blocks
+==11417== Rerun with --leak-check=full to see details of leaked memory
+==11417== 
+==11417== Use --track-origins=yes to see where uninitialised values come from
+==11417== For lists of detected and suppressed errors, rerun with: -s
+==11417== ERROR SUMMARY: 228 errors from 31 contexts (suppressed: 0 from 0)

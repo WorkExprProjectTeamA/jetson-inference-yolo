@@ -20,65 +20,29 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "videoSource.h"
-#include "videoOutput.h"
-
-#include "yoloNet.h"
-#include "objectTracker.h"
-#include "gstSpeaker.h"
-#include "customNetwork.h"
-
 #include <signal.h>
 
-bool signal_recieved = false;
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <nvtx3/nvToolsExt.h>
 
-static std::unordered_map<int, int> alertClassPriorities = {
-    // 최고위험 (4) - 화재/폭발/즉시위험
-    {26, 4}, // combustible_flammable_materials
-    {39, 4}, // combustible_intrusion_welding_zone 
-    {40, 4}, // smoking_in_non_smoking_area 
-    {25, 4}, // foreign_material_water_oil
-    {33, 4}, // cargo_collapse_during_transport
-	{7, 4},  // smoking 
-    // 고위험 (3) - 인명사고 위험
-    {34, 3}, // person_in_forklift_pathway
-    {45, 3}, // person_behind_reversing_vehicle
-    {1, 3},  // person_without_workwear
-    {32, 3}, // unstable_individual_cargo_loading
-    {36, 3}, // poor_loading_condition_collapse
-	{55, 1}, // forklift_driving_outside_designated_area
-    // 중위험 (2) - 구조적 위험/안전규정 위반
-    {30, 2}, // stacking_three_levels_or_more 
-	{31, 2}, // poor_rack_storage_condition
-    {35, 2}, // safety_rule_violation
-    {41, 2}, // person_in_cargo_compartment_loading
-    {42, 2}, // person_in_cargo_compartment_unloading 
-    // 저위험 (1) - 예방/관리 차원
-    {24, 1}, // welding_equipment 
-    {27, 1}, // sandwich_panel 
-    {28, 1}, // forklift_transport_limited_visibility 
-    {29, 1}, // rack_loading_surrounding_obstacles 
-    {37, 1}, // person_in_external_work_zone 
-    {38, 1}, // hand_pallet_cart_two_level_stacking 
-    {43, 1}, // insufficient_forklift_path_marking
-    {44, 1}, // obstacle_in_front_dock_door 
-    {46, 1}, // disorganized_empty_pallets
-    {47, 1}, // leaning_inside_rack_safety_line
-    {48, 1}, // pallet_warping_damage_corrosion 
-    {49, 1}, // person_riding_freight_elevator 
-    {50, 1}, // power_strip_without_overload_breaker
-    {51, 1}, // missing_fire_extinguisher 
-    {52, 1}, // restricted_area_door_open 
-    {53, 1}, // cargo_in_escape_route
-    {54, 1}  // dock_unloading_disconnected 
-};
+#include "yolonet.h"
+#include "gstSpeaker.h"
+
+bool signal_received = false;
+
+ImageBuffer* ImageBuffer::instance = nullptr;
+std::mutex ImageBuffer::instanceMutex;
+
+DetectionResults* DetectionResults::instance = nullptr;
+std::mutex DetectionResults::instanceMutex;
 
 void sig_handler(int signo)
 {
 	if( signo == SIGINT )
 	{
 		LogVerbose("received SIGINT\n");
-		signal_recieved = true;
+		signal_received = true;
 	}
 }
 
@@ -144,12 +108,11 @@ int main( int argc, char** argv )
 	}
 	
 
-	yoloNet* net = yoloNet::Create("", "networks/custom-detection/det.onnx", 0.0f, 
-						"networks/custom-detection/labels.txt", "");
+	yoloNet* net = yoloNet::Create("", "networks/custom-detection/det.onnx", 0.0f, "networks/custom-detection/labels.txt", "");
 	
 	if( !net )
 	{
-		LogError("detectnet:  failed to load detectNet model\n");
+		LogError("detectnet:  failed to load yoloNet model\n");
 		return 1;
 	}
 
@@ -157,36 +120,37 @@ int main( int argc, char** argv )
 	const uint32_t overlayFlags = yoloNet::OverlayFlagsFromStr(cmdLine.GetString("overlay", "box,labels,conf"));
 
 
-	// // HTTP 클라이언트 초기화
-	// AlertSender alertSender("http://localhost:8080");
+	gstSpeaker gstSpeaker("/home/cook/ws/jetson-inference-yolo/data/voices/");
 
-	// // MQTT 클라이언트 초기화
-	// MqttHeartbeatSender mqttSender("tcp://localhost:1883", "jetson_client", "heartbeat/data");
+
+	// // HTTP 클라이언트 초기화
+	// AlertSender alertSender("http://58.143.147.48:18080");
+
+	// MQTT 클라이언트 초기화
+	// MqttHeartbeatSender mqttSender("tcp://58.143.147.48:11883", "jetson_client", "heartbeat/data");
 	// if (!mqttSender.connect()) {
     // 	LogError("MQTT 연결 실패, heartbeat 기능 비활성화\n");
 	// }
 
-	// // 5분마다 heartbeat 전송하는 스레드 시작
+	// 5분마다 heartbeat 전송하는 스레드 시작
 	// std::thread heartbeatThread([&mqttSender]() {
-    // 	while (!signal_recieved) {
-    //     	std::this_thread::sleep_for(std::chrono::minutes(5));
+    // 	while (!signal_received) {
     //     	mqttSender.sendHeartbeat();
+	// 		LogVerbose("Send heartbeat thread\n");
+	// 		//std::this_thread::sleep_for(std::chrono::minutes(1));
+	// 		std::this_thread::sleep_for(std::chrono::seconds(10));
     // 	}
 	// });
 	// heartbeatThread.detach();
 
 
-	gstSpeaker gstSpeaker;
-
-	/*
-	 * processing loop
-	 */
-	while( !signal_recieved )
+    while( !signal_received )
 	{
 		// capture next image
 		uchar3* image = NULL;
 		int status = 0;
 		
+		nvtxRangePush("YOLONet::Capture");
 		if( !input->Capture(&image, &status) )
 		{
 			if( status == videoSource::TIMEOUT )
@@ -194,112 +158,65 @@ int main( int argc, char** argv )
 			
 			break; // EOS
 		}
+		nvtxRangePop();
 
 		// detect objects in the frame
 		yoloNet::Detection* detections = NULL;
+	
+		nvtxRangePush("YOLONet::Detect");
+		const int numDetections = net->Detect(image, input->GetWidth(), input->GetHeight(), &detections, overlayFlags);
+		nvtxRangePop();
 
-		// // 프레임 처리 기록
-		// MqttHeartbeatSender::recordFrame();
-
-		int numDetections = net->Detect(image, input->GetWidth(), input->GetHeight(), &detections, overlayFlags);
-
+		
 		if( numDetections > 0 )
 		{
-			std::pair<int, int> alertClassPriority = {-1, 0};
-
 			LogVerbose("%i objects detected\n", numDetections);
-
+		
 			for( int n=0; n < numDetections; n++ )
 			{
 				LogVerbose("\ndetected obj %i  class #%u (%s)  confidence=%f\n", n, detections[n].ClassID, net->GetClassDesc(detections[n].ClassID), detections[n].Confidence);
 				LogVerbose("bounding box %i  (%.2f, %.2f)  (%.2f, %.2f)  w=%.2f  h=%.2f\n", n, detections[n].Left, detections[n].Top, detections[n].Right, detections[n].Bottom, detections[n].Width(), detections[n].Height()); 
 			
-				auto it = alertClassPriorities.find(detections[n].ClassID);
 
-				if (it != alertClassPriorities.end()) {
-					if (alertClassPriority.second < it->second) {
-						alertClassPriority.first = detections[n].ClassID;
-						alertClassPriority.second = it->second;
-					}
-				}
+				// gstSpeaker.play_warning_sequence_async(0);
+				// if (detections[n].ClassID == 0 || detections[n].ClassID == 1) {
+				// 	gstSpeaker.play_warning_sequence_async(detections[n].ClassID);
+				// }
+
+				// if( detections[n].TrackID >= 0 ) // is this a tracked object?
+				// 	LogVerbose("tracking  ID %i  status=%i  frames=%i  lost=%i\n", detections[n].TrackID, detections[n].TrackStatus, detections[n].TrackFrames, detections[n].TrackLost);
 			}
+		}
+        
+        // std::string imagePath = saveCurrentFrame(image, input->GetWidth(), input->GetHeight());
 
-			if (alertClassPriority.first > -1) {
-				std::thread([alertClassPriority, &gstSpeaker]() {
-					// 음성 파일 경로 생성
-					std::string basePath = "/home/cook/ws/jetson-inference-yolo/data/voices/";
-					std::string filename = std::to_string(alertClassPriority.first) + ".mp3";
-					std::string fullPath = basePath + filename;
-		  
-					if (access(fullPath.c_str(), F_OK) == 0) {
-						LogVerbose("Playing alert sound: %s\n", fullPath.c_str());
-						gstSpeaker.play_mp3(fullPath);
-					} else {
-						LogError("Voice file not found: %s\n", fullPath.c_str());
-					}
-		  
-					std::this_thread::sleep_for(std::chrono::seconds(10));
-				}).detach();
+		// // 서버에 알림 전송
+		// std::thread([&alertSender, imagePath]() {
+        //     alertSender.sendAlert(1, imagePath);
+        // }).detach();
 
-				// render outputs
-				if( output != NULL )
-				{
-					output->Render(image, input->GetWidth(), input->GetHeight());
+		if( output != NULL )
+		{
+			output->Render(image, input->GetWidth(), input->GetHeight());
 
-					// update the status bar
-					char str[256];
-					sprintf(str, "TensorRT %i.%i.%i | %s | Network %.0f FPS", NV_TENSORRT_MAJOR, NV_TENSORRT_MINOR, NV_TENSORRT_PATCH, precisionTypeToStr(net->GetPrecision()), net->GetNetworkFPS());
-					output->SetStatus(str);
+			// update the status bar
+			char str[256];
+			sprintf(str, "TensorRT %i.%i.%i | %s | Network %.0f FPS", NV_TENSORRT_MAJOR, NV_TENSORRT_MINOR, NV_TENSORRT_PATCH, precisionTypeToStr(net->GetPrecision()), net->GetNetworkFPS());
+			output->SetStatus(str);
 
-					// check if the user quit
-					if( !output->IsStreaming() )
-						break;
-				}
-			}
-		}	
-
-
-
-		// //추가 (위에꺼 교체)
-		// if( numDetections > 0 )
-		// {
-		// 	// 객체 감지 성공 기록
-		// 	MqttHeartbeatSender::recordDetection();
-
-		// 	LogVerbose("%i objects detected\n", numDetections);
-
-		// 	if (numAlerts > 0) {
-		// 		// 현재 프레임을 이미지로 저장
-		// 		std::string imagePath = saveCurrentFrame(image, input->GetWidth(), input->GetHeight());
-
-		// 		// 서버에 알림 전송
-				// std::thread([&alertSender, imagePath]() {
-				// 	alertSender.sendAlert(1, imagePath);
-				// }).detach();
-		// 	}
-
-		// 	for( int n=0; n < numDetections; n++ )
-		// 	{
-		// 		LogVerbose("\ndetected obj %i  class #%u (%s)  confidence=%f\n", n, detections[n].ClassID, net->GetClassDesc(detections[n].ClassID), detections[n].Confidence);
-		// 		LogVerbose("bounding box %i  (%.2f, %.2f)  (%.2f, %.2f)  w=%.2f  h=%.2f\n", n, detections[n].Left, detections[n].Top, detections[n].Right, detections[n].Bottom, detections[n].Width(), detections[n].Height()); 
-		
-		// 		if( detections[n].TrackID >= 0 )
-		// 			LogVerbose("tracking  ID %i  status=%i  frames=%i  lost=%i\n", detections[n].TrackID, detections[n].TrackStatus, detections[n].TrackFrames, detections[n].TrackLost);
-		// 	}
-		// }
-
+			// check if the user quit
+			if( !output->IsStreaming() )
+				break;
+		}
 
 		// print out timing info
-		net->PrintProfilerTimes();
+		// net->PrintProfilerTimes();
 	}
-	
 
 	/*
 	 * destroy resources
 	 */
 	LogVerbose("yolonet:  shutting down...\n");
-
-	std::this_thread::sleep_for(std::chrono::seconds(5));
 	
 	SAFE_DELETE(input);
 	SAFE_DELETE(output);
@@ -310,3 +227,105 @@ int main( int argc, char** argv )
 	return 0;
 }
 
+void captureImages(videoSource* input) {
+    LogVerbose("Image Capture Thread OS ID: %ld\n", syscall(SYS_gettid));
+    ImageBuffer* buffer = ImageBuffer::getInstance();
+
+    while (!signal_received) {
+        uchar3* image = NULL;
+        int status = 0;
+
+        if (!input->Capture(&image, &status)) {
+            if (status == videoSource::TIMEOUT) {
+                continue;
+            }
+            break;
+        }
+
+        buffer->setImage(image, input->GetWidth(), input->GetHeight());
+    }
+}
+
+void processInference(yoloNet* net, uint32_t overlayFlags) {
+    LogVerbose("Inference Thread OS ID: %ld\n", syscall(SYS_gettid));
+    ImageBuffer* imageBuffer = ImageBuffer::getInstance();
+    DetectionResults* results = DetectionResults::getInstance();
+
+    while (!signal_received) {
+        uchar3* image;
+        int width, height;
+
+        if (!imageBuffer->getImage(image, width, height)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
+        MqttHeartbeatSender::recordFrame();
+
+        yoloNet::Detection* detections = NULL;
+        int numDetections = net->Detect(image, width, height, &detections, overlayFlags);
+
+        results->setResults(detections, numDetections, image, width, height);
+    }
+}
+
+void renderOutput(videoOutput* output, yoloNet* net) {
+    LogVerbose("Output Thread OS ID: %ld\n", syscall(SYS_gettid));
+    DetectionResults* results = DetectionResults::getInstance();
+
+    while (!signal_received) {
+        yoloNet::Detection* detections;
+        int numDetections;
+        uchar3* image;
+        int width, height;
+
+        if (!results->getResults(detections, numDetections, image, width, height)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
+        if (numDetections > 0) {
+            std::pair<int, int> alertClassPriority = {-1, 0};
+
+            LogVerbose("%i objects detected\n", numDetections);
+
+            for (int n = 0; n < numDetections; n++) {
+                LogVerbose("\ndetected obj %i  class #%u (%s)  confidence=%f\n",
+                          n, detections[n].ClassID, net->GetClassDesc(detections[n].ClassID),
+                          detections[n].Confidence);
+                LogVerbose("bounding box %i  (%.2f, %.2f)  (%.2f, %.2f)  w=%.2f  h=%.2f\n",
+                          n, detections[n].Left, detections[n].Top, detections[n].Right,
+                          detections[n].Bottom, detections[n].Width(), detections[n].Height());
+
+                auto it = alertClassPriorities.find(detections[n].ClassID);
+                if (it != alertClassPriorities.end()) {
+                    if (alertClassPriority.second < it->second) {
+                        alertClassPriority.first = detections[n].ClassID;
+                        alertClassPriority.second = it->second;
+                    }
+                }
+            }
+
+            // if (alertClassPriority.first > -1) {
+            //     std::string imagePath = saveCurrentFrame(image, width, height);
+            //     std::thread([&alertSender, imagePath]() {
+            //         alertSender.sendAlert(1, imagePath);
+            //     }).detach();
+            // }
+        }
+
+        if (output != NULL) {
+            output->Render(image, width, height);
+
+            char str[256];
+            sprintf(str, "TensorRT %i.%i.%i | %s | Network %.0f FPS",
+                   NV_TENSORRT_MAJOR, NV_TENSORRT_MINOR, NV_TENSORRT_PATCH,
+                   precisionTypeToStr(net->GetPrecision()), net->GetNetworkFPS());
+            output->SetStatus(str);
+
+            if (!output->IsStreaming()) {
+                break;
+            }
+        }
+    }
+}

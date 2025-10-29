@@ -9,6 +9,7 @@ std::chrono::high_resolution_clock::time_point MqttHeartbeatSender::lastStatsRes
 // AlertSender
 AlertSender::AlertSender(const std::string& url) : server_url(url) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
+    LogVerbose("AlertSender Constructor finished.");
 }
 
 AlertSender::~AlertSender() {
@@ -62,13 +63,15 @@ bool AlertSender::sendAlert(int alertType, const std::string& imagePath) {
 MqttHeartbeatSender::MqttHeartbeatSender(const std::string& address, const std::string& client_id, const std::string& heartbeat_topic)
     : broker_address(address), topic(heartbeat_topic), connected(false) {
 
-    MQTTClient_create(&client, broker_address.c_str(), client_id.c_str(),
-                        MQTTCLIENT_PERSISTENCE_NONE, NULL);
-
+    LogVerbose("MqttHeartbeatSender constructor entered.\n");
+    MQTTClient_create(&client, broker_address.c_str(), client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    
+    LogVerbose("Finished creating mqtt client.\n");
     // 통계 초기화
     lastStatsReset = std::chrono::high_resolution_clock::now();
     totalFrames = 0;
     totalDetections = 0;
+    LogVerbose("Finished MqttHeartbeatsSender constructor.\n");
 }
 
 MqttHeartbeatSender::~MqttHeartbeatSender() {
@@ -79,6 +82,7 @@ MqttHeartbeatSender::~MqttHeartbeatSender() {
 }
 
 bool MqttHeartbeatSender::connect() {
+    LogVerbose("MqttHeartbeatSender::connect() entered\n");
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     conn_opts.keepAliveInterval = 20;
     conn_opts.cleansession = 1;
@@ -95,6 +99,8 @@ bool MqttHeartbeatSender::connect() {
 }
 
 bool MqttHeartbeatSender::sendHeartbeat() {
+    LogVerbose("MqttHeartbeatSender entered.\n");
+
     if (!connected) {
         LogError("MQTT 연결되지 않음\n");
         return false;
