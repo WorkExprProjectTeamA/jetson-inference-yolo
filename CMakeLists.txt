@@ -168,8 +168,11 @@ endforeach()
 #endif()
 
 # create symbolic link for network and image data
+# and video, voice data
 execute_process( COMMAND "${CMAKE_COMMAND}" "-E" "create_symlink" "${PROJECT_SOURCE_DIR}/data/networks" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/networks" )
 execute_process( COMMAND "${CMAKE_COMMAND}" "-E" "create_symlink" "${PROJECT_SOURCE_DIR}/data/images" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/images" )
+execute_process( COMMAND "${CMAKE_COMMAND}" "-E" "create_symlink" "${PROJECT_SOURCE_DIR}/data/videos" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/videos" )
+execute_process( COMMAND "${CMAKE_COMMAND}" "-E" "create_symlink" "${PROJECT_SOURCE_DIR}/data/voices" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/voices" )
 
   
 # copy image data (EDIT: these are now symlinked above)
