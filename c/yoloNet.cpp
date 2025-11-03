@@ -161,7 +161,6 @@ bool yoloNet::allocDetections()
 	if( !cudaAllocMapped((void**)&mDetectionSets, det_size) )
 		return false;
 	
-	memset(mDetectionSets, 0, det_size);
 	return true;
 }
 

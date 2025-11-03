@@ -54,95 +54,95 @@ static std::unordered_map<int, int> alertClassPriorities = {
     {54, 1}  // dock_unloading_disconnected 
 };
 
-class ImageBuffer {
-private:
-    static ImageBuffer* instance;
-    static std::mutex instanceMutex;
+// class ImageBuffer {
+// private:
+//     static ImageBuffer* instance;
+//     static std::mutex instanceMutex;
 
-    mutable std::mutex dataMutex;
-    uchar3* image;
-    int width;
-    int height;
+//     mutable std::mutex dataMutex;
+//     uchar3* image;
+//     int width;
+//     int height;
 
-    ImageBuffer() : image(nullptr), width(0), height(0) {}
+//     ImageBuffer() : image(nullptr), width(0), height(0) {}
 
-public:
-    static ImageBuffer* getInstance() {
-        std::lock_guard<std::mutex> lock(instanceMutex);
-        if (instance == nullptr) {
-            instance = new ImageBuffer();
-        }
-        return instance;
-    }
+// public:
+//     static ImageBuffer* getInstance() {
+//         std::lock_guard<std::mutex> lock(instanceMutex);
+//         if (instance == nullptr) {
+//             instance = new ImageBuffer();
+//         }
+//         return instance;
+//     }
 
-    void setImage(uchar3* img, int w, int h) {
-        std::lock_guard<std::mutex> lock(dataMutex);
-        image = img;
-        width = w;
-        height = h;
-    }
+//     void setImage(uchar3* img, int w, int h) {
+//         std::lock_guard<std::mutex> lock(dataMutex);
+//         image = img;
+//         width = w;
+//         height = h;
+//     }
 
-    bool getImage(uchar3*& img, int& w, int& h) {
-        std::unique_lock<std::mutex> lock(dataMutex);
+//     bool getImage(uchar3*& img, int& w, int& h) {
+//         std::unique_lock<std::mutex> lock(dataMutex);
 
-        img = image;
-        w = width;
-        h = height;
+//         img = image;
+//         w = width;
+//         h = height;
 
-        return img != nullptr;
-    }
-};
+//         return img != nullptr;
+//     }
+// };
 
-class DetectionResults {
-private:
-    static DetectionResults* instance;
-    static std::mutex instanceMutex;
+// class DetectionResults {
+// private:
+//     static DetectionResults* instance;
+//     static std::mutex instanceMutex;
 
-    mutable std::mutex dataMutex;
-    yoloNet::Detection* detections;
-    int numDetections;
-    uchar3* image;
-    int width;
-    int height;
+//     mutable std::mutex dataMutex;
+//     yoloNet::Detection* detections;
+//     int numDetections;
+//     uchar3* image;
+//     int width;
+//     int height;
 
-    DetectionResults() : detections(nullptr), numDetections(0), image(nullptr), width(0), height(0) {}
+//     DetectionResults() : detections(nullptr), numDetections(0), image(nullptr), width(0), height(0) {}
 
-public:
-    static DetectionResults* getInstance() {
-        std::lock_guard<std::mutex> lock(instanceMutex);
-        if (instance == nullptr) {
-            instance = new DetectionResults();
-        }
-        return instance;
-    }
+// public:
+//     static DetectionResults* getInstance() {
+//         std::lock_guard<std::mutex> lock(instanceMutex);
+//         if (instance == nullptr) {
+//             instance = new DetectionResults();
+//         }
+//         return instance;
+//     }
 
-    void setResults(yoloNet::Detection* dets, int numDets, uchar3* img, int w, int h) {
-        std::lock_guard<std::mutex> lock(dataMutex);
-        detections = dets;
-        numDetections = numDets;
-        image = img;
-        width = w;
-        height = h;
-    }
+//     void setResults(yoloNet::Detection* dets, int numDets, uchar3* img, int w, int h) {
+//         std::lock_guard<std::mutex> lock(dataMutex);
+//         detections = dets;
+//         numDetections = numDets;
+//         image = img;
+//         width = w;
+//         height = h;
+//     }
 
-    bool getResults(yoloNet::Detection*& dets, int& numDets, uchar3*& img, int& w, int& h) {
-        std::unique_lock<std::mutex> lock(dataMutex);
+//     bool getResults(yoloNet::Detection*& dets, int& numDets, uchar3*& img, int& w, int& h) {
+//         std::unique_lock<std::mutex> lock(dataMutex);
 
-        dets = detections;
-        numDets = numDetections;
-        img = image;
-        w = width;
-        h = height;
+//         dets = detections;
+//         numDets = numDetections;
+//         img = image;
+//         w = width;
+//         h = height;
 
-        return dets != nullptr;
-    }
-};
+//         return dets != nullptr;
+//     }
+// };
 
-void captureImages(videoSource* input);
+// void captureImages(videoSource* input);
 
-void processInference(yoloNet* net, uint32_t overlayFlags);
+// void processInference(yoloNet* net, uint32_t overlayFlags);
 
-void renderOutput(videoOutput* output, yoloNet* net);
+// void renderOutput(videoOutput* output, yoloNet* net);
 
 
 

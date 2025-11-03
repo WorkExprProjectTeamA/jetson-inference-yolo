@@ -31,11 +31,11 @@
 
 bool signal_received = false;
 
-ImageBuffer* ImageBuffer::instance = nullptr;
-std::mutex ImageBuffer::instanceMutex;
+// ImageBuffer* ImageBuffer::instance = nullptr;
+// std::mutex ImageBuffer::instanceMutex;
 
-DetectionResults* DetectionResults::instance = nullptr;
-std::mutex DetectionResults::instanceMutex;
+// DetectionResults* DetectionResults::instance = nullptr;
+// std::mutex DetectionResults::instanceMutex;
 
 void sig_handler(int signo)
 {
@@ -120,7 +120,7 @@ int main( int argc, char** argv )
 	const uint32_t overlayFlags = yoloNet::OverlayFlagsFromStr(cmdLine.GetString("overlay", "box,labels,conf"));
 
 
-	gstSpeaker gstSpeaker("/home/cook/ws/jetson-inference-yolo/data/voices/");
+	// gstSpeaker gstSpeaker("/home/cook/ws/jetson-inference-yolo/data/voices/");
 
 
 	// // HTTP 클라이언트 초기화
@@ -227,105 +227,105 @@ int main( int argc, char** argv )
 	return 0;
 }
 
-void captureImages(videoSource* input) {
-    LogVerbose("Image Capture Thread OS ID: %ld\n", syscall(SYS_gettid));
-    ImageBuffer* buffer = ImageBuffer::getInstance();
+// void captureImages(videoSource* input) {
+//     LogVerbose("Image Capture Thread OS ID: %ld\n", syscall(SYS_gettid));
+//     ImageBuffer* buffer = ImageBuffer::getInstance();
 
-    while (!signal_received) {
-        uchar3* image = NULL;
-        int status = 0;
+//     while (!signal_received) {
+//         uchar3* image = NULL;
+//         int status = 0;
 
-        if (!input->Capture(&image, &status)) {
-            if (status == videoSource::TIMEOUT) {
-                continue;
-            }
-            break;
-        }
+//         if (!input->Capture(&image, &status)) {
+//             if (status == videoSource::TIMEOUT) {
+//                 continue;
+//             }
+//             break;
+//         }
 
-        buffer->setImage(image, input->GetWidth(), input->GetHeight());
-    }
-}
+//         buffer->setImage(image, input->GetWidth(), input->GetHeight());
+//     }
+// }
 
-void processInference(yoloNet* net, uint32_t overlayFlags) {
-    LogVerbose("Inference Thread OS ID: %ld\n", syscall(SYS_gettid));
-    ImageBuffer* imageBuffer = ImageBuffer::getInstance();
-    DetectionResults* results = DetectionResults::getInstance();
+// void processInference(yoloNet* net, uint32_t overlayFlags) {
+//     LogVerbose("Inference Thread OS ID: %ld\n", syscall(SYS_gettid));
+//     ImageBuffer* imageBuffer = ImageBuffer::getInstance();
+//     DetectionResults* results = DetectionResults::getInstance();
 
-    while (!signal_received) {
-        uchar3* image;
-        int width, height;
+//     while (!signal_received) {
+//         uchar3* image;
+//         int width, height;
 
-        if (!imageBuffer->getImage(image, width, height)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
-        }
+//         if (!imageBuffer->getImage(image, width, height)) {
+//             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//             continue;
+//         }
 
-        MqttHeartbeatSender::recordFrame();
+//         MqttHeartbeatSender::recordFrame();
 
-        yoloNet::Detection* detections = NULL;
-        int numDetections = net->Detect(image, width, height, &detections, overlayFlags);
+//         yoloNet::Detection* detections = NULL;
+//         int numDetections = net->Detect(image, width, height, &detections, overlayFlags);
 
-        results->setResults(detections, numDetections, image, width, height);
-    }
-}
+//         results->setResults(detections, numDetections, image, width, height);
+//     }
+// }
 
-void renderOutput(videoOutput* output, yoloNet* net) {
-    LogVerbose("Output Thread OS ID: %ld\n", syscall(SYS_gettid));
-    DetectionResults* results = DetectionResults::getInstance();
+// void renderOutput(videoOutput* output, yoloNet* net) {
+//     LogVerbose("Output Thread OS ID: %ld\n", syscall(SYS_gettid));
+//     DetectionResults* results = DetectionResults::getInstance();
 
-    while (!signal_received) {
-        yoloNet::Detection* detections;
-        int numDetections;
-        uchar3* image;
-        int width, height;
+//     while (!signal_received) {
+//         yoloNet::Detection* detections;
+//         int numDetections;
+//         uchar3* image;
+//         int width, height;
 
-        if (!results->getResults(detections, numDetections, image, width, height)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
-        }
+//         if (!results->getResults(detections, numDetections, image, width, height)) {
+//             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//             continue;
+//         }
 
-        if (numDetections > 0) {
-            std::pair<int, int> alertClassPriority = {-1, 0};
+//         if (numDetections > 0) {
+//             std::pair<int, int> alertClassPriority = {-1, 0};
 
-            LogVerbose("%i objects detected\n", numDetections);
+//             LogVerbose("%i objects detected\n", numDetections);
 
-            for (int n = 0; n < numDetections; n++) {
-                LogVerbose("\ndetected obj %i  class #%u (%s)  confidence=%f\n",
-                          n, detections[n].ClassID, net->GetClassDesc(detections[n].ClassID),
-                          detections[n].Confidence);
-                LogVerbose("bounding box %i  (%.2f, %.2f)  (%.2f, %.2f)  w=%.2f  h=%.2f\n",
-                          n, detections[n].Left, detections[n].Top, detections[n].Right,
-                          detections[n].Bottom, detections[n].Width(), detections[n].Height());
+//             for (int n = 0; n < numDetections; n++) {
+//                 LogVerbose("\ndetected obj %i  class #%u (%s)  confidence=%f\n",
+//                           n, detections[n].ClassID, net->GetClassDesc(detections[n].ClassID),
+//                           detections[n].Confidence);
+//                 LogVerbose("bounding box %i  (%.2f, %.2f)  (%.2f, %.2f)  w=%.2f  h=%.2f\n",
+//                           n, detections[n].Left, detections[n].Top, detections[n].Right,
+//                           detections[n].Bottom, detections[n].Width(), detections[n].Height());
 
-                auto it = alertClassPriorities.find(detections[n].ClassID);
-                if (it != alertClassPriorities.end()) {
-                    if (alertClassPriority.second < it->second) {
-                        alertClassPriority.first = detections[n].ClassID;
-                        alertClassPriority.second = it->second;
-                    }
-                }
-            }
+//                 auto it = alertClassPriorities.find(detections[n].ClassID);
+//                 if (it != alertClassPriorities.end()) {
+//                     if (alertClassPriority.second < it->second) {
+//                         alertClassPriority.first = detections[n].ClassID;
+//                         alertClassPriority.second = it->second;
+//                     }
+//                 }
+//             }
 
-            // if (alertClassPriority.first > -1) {
-            //     std::string imagePath = saveCurrentFrame(image, width, height);
-            //     std::thread([&alertSender, imagePath]() {
-            //         alertSender.sendAlert(1, imagePath);
-            //     }).detach();
-            // }
-        }
+//             // if (alertClassPriority.first > -1) {
+//             //     std::string imagePath = saveCurrentFrame(image, width, height);
+//             //     std::thread([&alertSender, imagePath]() {
+//             //         alertSender.sendAlert(1, imagePath);
+//             //     }).detach();
+//             // }
+//         }
 
-        if (output != NULL) {
-            output->Render(image, width, height);
+//         if (output != NULL) {
+//             output->Render(image, width, height);
 
-            char str[256];
-            sprintf(str, "TensorRT %i.%i.%i | %s | Network %.0f FPS",
-                   NV_TENSORRT_MAJOR, NV_TENSORRT_MINOR, NV_TENSORRT_PATCH,
-                   precisionTypeToStr(net->GetPrecision()), net->GetNetworkFPS());
-            output->SetStatus(str);
+//             char str[256];
+//             sprintf(str, "TensorRT %i.%i.%i | %s | Network %.0f FPS",
+//                    NV_TENSORRT_MAJOR, NV_TENSORRT_MINOR, NV_TENSORRT_PATCH,
+//                    precisionTypeToStr(net->GetPrecision()), net->GetNetworkFPS());
+//             output->SetStatus(str);
 
-            if (!output->IsStreaming()) {
-                break;
-            }
-        }
-    }
-}
+//             if (!output->IsStreaming()) {
+//                 break;
+//             }
+//         }
+//     }
+// }
