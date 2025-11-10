@@ -151,7 +151,7 @@ bool imageLoader::Capture( void** output, imageFormat format, uint64_t timeout, 
 	// reclaim old buffers
 	if( mBuffers.size() >= mOptions.numBuffers )
 	{
-		CUDA(cudaFreeHost(mBuffers[0]));
+		CUDA(cudaFreeMapped(mBuffers[0]));
 		mBuffers.erase(mBuffers.begin());
 	}
 

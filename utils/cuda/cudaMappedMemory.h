@@ -31,6 +31,34 @@
 #include <valgrind/valgrind.h>
 #include <valgrind/memcheck.h>
 
+/**
+ * Free mapped memory that was allocated with cudaMallocMapped().
+ *
+ * This function wraps cudaFreeHost() and automatically notifies Valgrind
+ * about the memory deallocation when running under Valgrind, enabling
+ * proper memory leak detection for CUDA mapped allocations.
+ *
+ * @param[in] ptr Pointer to the mapped memory to free. This should be a pointer
+ *                that was returned by cudaMallocMapped(). NULL pointers are safely ignored.
+ *
+ * @note Always use this function to free memory allocated with cudaMallocMapped()
+ *       to ensure proper Valgrind tracking.
+ * 
+ * @returns cudaSuccess on success, cudaErrorInvalidValue if ptr is NULL.
+ * @ingroup cudaMemory
+ */
+inline cudaError_t cudaFreeMapped( void* ptr )
+{
+    if( !ptr )
+        return cudaErrorInvalidValue;
+
+    // Valgrind로 실행 중일 때만 메모리 해제 추적
+    if (RUNNING_ON_VALGRIND) {
+        VALGRIND_FREELIKE_BLOCK(ptr, 0);
+    }
+
+    return cudaFreeHost(ptr);
+}
 
 /**
  * Allocate mapped memory that shares the same physical memory between CPU and GPU,
