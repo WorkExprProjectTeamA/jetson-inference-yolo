@@ -26,6 +26,9 @@
 #include "filesystem.h"
 #include "logging.h"
 
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+
 #include <strings.h>
 
 
@@ -100,8 +103,13 @@ imageLoader::~imageLoader()
 {
 	const size_t numBuffers = mBuffers.size();
 
-	for( size_t n=0; n < numBuffers; n++ )
-		CUDA(cudaFreeHost(mBuffers[n]));
+	for( size_t n=0; n < numBuffers; n++ ) {
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_FREELIKE_BLOCK(mBuffers[n], 0);
+		}
+
+		CUDA(cudaFree(mBuffers[n]));
+	}
 
 	mBuffers.clear();
 }
@@ -151,7 +159,11 @@ bool imageLoader::Capture( void** output, imageFormat format, uint64_t timeout, 
 	// reclaim old buffers
 	if( mBuffers.size() >= mOptions.numBuffers )
 	{
-		CUDA(cudaFreeMapped(mBuffers[0]));
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_FREELIKE_BLOCK(mBuffers[0], 0);
+		}
+
+		CUDA(cudaFree(mBuffers[0]));
 		mBuffers.erase(mBuffers.begin());
 	}
 

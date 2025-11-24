@@ -2,24 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(jetson-inference-yolo)
 
-# submodule warning
-message(" ")
-message("Note:  this project uses git submodules in the source tree.")
-message("       if you haven't already, run the following command from")
-message("       the project's root directory:")
-message(" ")
-message("           git submodule update --init") 
-message("\n")
-
-if( NOT EXISTS "${PROJECT_SOURCE_DIR}/utils/.git" )
-	message("Note:  required git submodules have not been detected.")
-	message("       first, please run the following command from the")
-	message("       the project's root directory to clone them:")
-	message(" ")
-	message("          git submodule update --init")
-	message(" ")
-	message(FATAL_ERROR "missing required git submodules, see instructions above")
-endif()
+# (submodule check removed) project no longer requires git submodules
 
 
 # setup build flags
@@ -233,4 +216,3 @@ install(EXPORT jetson-inference-yoloConfig DESTINATION share/jetson-inference-yo
 
 # run ldconfig after installing
 install(CODE "execute_process( COMMAND ldconfig )")
-

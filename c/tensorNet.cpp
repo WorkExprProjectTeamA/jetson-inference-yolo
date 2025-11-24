@@ -40,6 +40,9 @@
 #include <fstream>
 #include <map>
 
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+
 
 #if NV_TENSORRT_MAJOR > 1
 	#define CREATE_INFER_BUILDER nvinfer1::createInferBuilder
@@ -60,7 +63,8 @@
 					   "           $ cd <jetson-inference>/tools\n" 	  	\
 					   "           $ ./download-models.sh\n"
 
-#define USE_INPUT_TENSOR_CUDA_DEVICE_MEMORY
+//#define USE_INPUT_TENSOR_CUDA_DEVICE_MEMORY
+#define USE_INPUT_TENSOR_CUDA_UNIFIED_MEMORY
 #define CHECKSUM_TYPE "sha256sum"
 
 //---------------------------------------------------------------------
@@ -412,13 +416,21 @@ tensorNet::~tensorNet()
 	{
 	#ifdef USE_INPUT_TENSOR_CUDA_DEVICE_MEMORY
 		CUDA_FREE(mInputs[n].CUDA);
+	#elif defined(USE_INPUT_TENSOR_CUDA_UNIFIED_MEMORY)
+		CUDA_FREE(mInputs[n].CUDA);
 	#else
 		CUDA_FREE_HOST(mInputs[n].CUDA);
 	#endif
 	}
 	
 	for( size_t n=0; n < mOutputs.size(); n++ )
+	{
+	#ifdef USE_INPUT_TENSOR_CUDA_UNIFIED_MEMORY
+		CUDA_FREE(mOutputs[n].CUDA);
+	#else
 		CUDA_FREE_HOST(mOutputs[n].CPU);
+	#endif
+	}
 	
 	free(mBindings);
 }
@@ -1574,7 +1586,7 @@ bool tensorNet::LoadEngine( nvinfer1::ICudaEngine* engine,
 
 		const size_t inputSize = mMaxBatchSize * sizeDims(inputDims) * sizeof(float);
 		LogVerbose(LOG_TRT "binding to input %i %s  dims (b=%u c=%u h=%u w=%u) size=%zu\n", n, input_blobs[n].c_str(), mMaxBatchSize, DIMS_C(inputDims), DIMS_H(inputDims), DIMS_W(inputDims), inputSize);
-
+	
 		// allocate memory to hold the input buffer
 		void* inputCPU  = NULL;
 		void* inputCUDA = NULL;
@@ -1585,8 +1597,25 @@ bool tensorNet::LoadEngine( nvinfer1::ICudaEngine* engine,
 			LogError(LOG_TRT "failed to alloc CUDA device memory for tensor input, %zu bytes\n", inputSize);
 			return false;
 		}
-		
+
 		CUDA(cudaMemset(inputCUDA, 0, inputSize));
+
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_MALLOCLIKE_BLOCK(inputCUDA, inputSize, 0, 1);
+		}
+	#elif defined(USE_INPUT_TENSOR_CUDA_UNIFIED_MEMORY)
+		if( CUDA_FAILED(cudaMallocManaged((void**)&inputCUDA, inputSize)) )
+		{
+			LogError(LOG_TRT "failed to alloc CUDA unified memory for tensor input, %zu bytes\n", inputSize);
+			return false;
+		}
+
+		CUDA(cudaMemset(inputCUDA, 0, inputSize));
+		inputCPU = inputCUDA;
+
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_MALLOCLIKE_BLOCK(inputCUDA, inputSize, 0, 1);
+		}
 	#else
 		if( !cudaAllocMapped((void**)&inputCPU, (void**)&inputCUDA, inputSize) )
 		{
@@ -1657,12 +1686,31 @@ bool tensorNet::LoadEngine( nvinfer1::ICudaEngine* engine,
 		void* outputCPU  = NULL;
 		void* outputCUDA = NULL;
 		
+	#ifdef USE_INPUT_TENSOR_CUDA_UNIFIED_MEMORY
+		if( CUDA_FAILED(cudaMallocManaged((void**)&outputCUDA, outputSize)) )
+		{
+			LogError(LOG_TRT "failed to alloc CUDA unified memory for tensor output, %zu bytes\n", outputSize);
+			return false;
+		}
+
+		CUDA(cudaMemset(outputCUDA, 0, outputSize));
+		outputCPU = outputCUDA;
+
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_MALLOCLIKE_BLOCK(outputCUDA, outputSize, 0, 1);
+		}
+	#else
 		if( CUDA_FAILED(cudaMalloc((void**)&outputCUDA, outputSize)) )
 		{
 			LogError(LOG_TRT "failed to alloc CUDA mapped memory for tensor output, %zu bytes\n", outputSize);
 			return false;
 		}
 		CUDA(cudaMemset(outputCUDA, 0, outputSize));
+
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_MALLOCLIKE_BLOCK(outputCUDA, outputSize, 0, 1);
+		}
+	#endif
 	
     #if NV_TENSORRT_MAJOR >= 10
         //if( !mContext->setTensorAddress(output_blobs[n].c_str(), outputCUDA) )
@@ -1722,6 +1770,10 @@ bool tensorNet::LoadEngine( nvinfer1::ICudaEngine* engine,
 		{
 			LogError(LOG_TRT "failed to allocate %zu bytes for unused binding %u\n", bindingSize, n);
 			return false;
+		}
+
+		if (RUNNING_ON_VALGRIND) {
+			VALGRIND_MALLOCLIKE_BLOCK(mBindings[n], bindingSize, 0, 1);
 		}
 		
 		LogVerbose(LOG_TRT "allocated %zu bytes for unused binding %u\n", bindingSize, n);

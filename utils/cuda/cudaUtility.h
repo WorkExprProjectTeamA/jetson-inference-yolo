@@ -32,6 +32,10 @@
 
 #include "logging.h"
 
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+
+
 
 /**
  * Execute a CUDA call and print out any errors
@@ -107,13 +111,25 @@ inline cudaError_t cudaCheckError(cudaError_t retval, const char* txt, const cha
  * Check for non-NULL pointer before freeing it, and then set the pointer to NULL.
  * @ingroup cudaError
  */
-#define CUDA_FREE(x) 		if(x != NULL) { cudaFree(x); x = NULL; }
+#define CUDA_FREE(x) 	if(x != NULL) { \
+							if (RUNNING_ON_VALGRIND) { \
+								VALGRIND_FREELIKE_BLOCK(x, 0); \
+							} \
+							cudaFree(x); \
+							x = NULL; \
+						}
 
 /**
  * Check for non-NULL pointer before freeing it, and then set the pointer to NULL.
  * @ingroup cudaError
  */
-#define CUDA_FREE_HOST(x)	if(x != NULL) { cudaFreeHost(x); x = NULL; }
+#define CUDA_FREE_HOST(x)	if(x != NULL) { \
+								if (RUNNING_ON_VALGRIND) { \
+									VALGRIND_FREELIKE_BLOCK(x, 0); \
+								} \
+								cudaFreeHost(x); \
+								x = NULL; \
+							}
 
 /**
  * Check for non-NULL pointer before deleting it, and then set the pointer to NULL.

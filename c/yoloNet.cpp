@@ -20,7 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
- 
+#include <cstring>
+
 #include "yoloNet.h"
 #include "objectTracker.h"
 #include "tensorConvert.h"
@@ -293,8 +294,6 @@ bool Letterbox(cv::Mat& input, uint32_t input_width, uint32_t input_height, imag
 // preProcess
 bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFormat format )
 {
-	PROFILER_BEGIN(PROFILER_PREPROCESS);
-
 	cv::Mat inputMat;
 	if (format == IMAGE_RGB8) {
 		inputMat = cv::Mat(height, width, CV_8UC3, input);
@@ -307,14 +306,17 @@ bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFor
 
 	Letterbox(inputMat, width, height, format, nchw, &mPreParam, GetInputWidth(), GetInputHeight());
 
-    if (CUDA_FAILED(cudaMemcpy(mInputs[0].CUDA, nchw.data, nchw.total() * nchw.elemSize(), cudaMemcpyHostToDevice))) 
-	{
-		LogError(LOG_TRT "yoloNet::preProcess() -- failed to copy nchw data to GPU\n");
-      	return false;
-  	}
+	const size_t copySize = nchw.total() * nchw.elemSize();
+
+	std::memcpy(mInputs[0].CPU, nchw.data, copySize);
+
+// 	if (CUDA_FAILED(cudaMemcpy(mInputs[0].CUDA, nchw.data, copySize, cudaMemcpyHostToDevice))) 
+// 	{
+// 		LogError(LOG_TRT "yoloNet::preProcess() -- failed to copy nchw data to GPU\n");
+//       	return false;
+//   	}
 
 
-    PROFILER_END(PROFILER_PREPROCESS);
     return true;
 }
 
@@ -322,15 +324,13 @@ bool yoloNet::preProcess( void* input, uint32_t width, uint32_t height, imageFor
 // postProcess
 int yoloNet::postProcess( Detection* detections )
 {
-	PROFILER_BEGIN(PROFILER_POSTPROCESS);
-
 	int numDetections = 0;
 
-	mOutputs[0].CPU = (float*)malloc(mOutputs[0].size);
+	// mOutputs[0].CPU = (float*)malloc(mOutputs[0].size);
 
-	CUDA(cudaMemcpy(mOutputs[0].CPU, mOutputs[0].CUDA, mOutputs[0].size, cudaMemcpyDeviceToHost));
+	// CUDA(cudaMemcpy(mOutputs[0].CPU, mOutputs[0].CUDA, mOutputs[0].size, cudaMemcpyDeviceToHost));
 
-	float* output_host_ptr = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
+	// float* output_host_ptr = mOutputs[0].CPU;  // YOLO output: (1, 60, 8400)
 
 	const uint32_t numAnchors = DIMS_W(mOutputs[0].dims);  // 8400
 	const uint32_t numChannels = DIMS_H(mOutputs[0].dims); // 60
@@ -341,7 +341,7 @@ int yoloNet::postProcess( Detection* detections )
     std::vector<int>      labels;
     std::vector<int>      indices;
 
-	cv::Mat output = cv::Mat(numChannels, numAnchors, CV_32F, output_host_ptr);
+	cv::Mat output = cv::Mat(numChannels, numAnchors, CV_32F, mOutputs[0].CPU);
     output         = output.t();
 
 	for (int i = 0; i < numAnchors; i++) {
@@ -389,8 +389,6 @@ int yoloNet::postProcess( Detection* detections )
 
         numDetections += 1;
     }
-
-    PROFILER_END(PROFILER_POSTPROCESS);
 
 	return numDetections;
 }
