@@ -1,0 +1,155 @@
+==3703== Memcheck, a memory error detector
+==3703== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==3703== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==3703== Command: ./yolonet images/class46_1.jpg output.jpg
+==3703== Parent PID: 2806
+==3703== 
+==3703== Warning: set address range perms: large range [0x1f354000, 0x37407000) (noaccess)
+==3703== Warning: set address range perms: large range [0x1f360000, 0x37403000) (defined)
+==3703== Warning: set address range perms: large range [0x206000000, 0x3e2480000) (noaccess)
+==3703== Syscall param ioctl(TCGETA) points to unaddressable byte(s)
+==3703==    at 0x57CDD50: ioctl (ioctl.S:26)
+==3703==    by 0x3DB687A7: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libnvrm_gpu.so)
+==3703==    by 0x3DB6202B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libnvrm_gpu.so)
+==3703==    by 0x391FC7FB: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x391DF12B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x391E02AB: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x391E33D7: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x391EDD5B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x391EDEA3: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x39314F5B: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x390ED7D7: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==    by 0x39126517: ??? (in /usr/lib/aarch64-linux-gnu/nvidia/libcuda.so.1.1)
+==3703==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==3703== 
+==3703== Warning: noted but unhandled ioctl 0x4e04 with no size/direction hints.
+==3703==    This could cause spurious value errors to appear.
+==3703==    See README_MISSING_SYSCALL_OR_IOCTL for guidance on writing a proper wrapper.
+==3703== Conditional jump or move depends on uninitialised value(s)
+==3703==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA3B0F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA8CB7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAC8F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703== 
+==3703== Use of uninitialised value of size 8
+==3703==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA3B0F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA8CB7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAC8F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x4A3435F: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==3703== 
+==3703== Conditional jump or move depends on uninitialised value(s)
+==3703==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA48FB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAC9B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x4A3435F: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==3703== 
+==3703== Use of uninitialised value of size 8
+==3703==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADEFB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA48FB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAC9B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CAAED3: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7516B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x4A3435F: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==3703==    by 0x4A31DE7: tensorNet::ProcessNetwork(bool) (tensorNet.cpp:1929)
+==3703== 
+==3703== Conditional jump or move depends on uninitialised value(s)
+==3703==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0BCB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x4A3435F: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==3703==    by 0x4A31DE7: tensorNet::ProcessNetwork(bool) (tensorNet.cpp:1929)
+==3703== 
+==3703== Use of uninitialised value of size 8
+==3703==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0BCB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x4A3435F: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==3703==    by 0x4A31DE7: tensorNet::ProcessNetwork(bool) (tensorNet.cpp:1929)
+==3703==    by 0x4A3D5FF: yoloNet::Detect(void*, unsigned int, unsigned int, imageFormat, yoloNet::Detection*, unsigned int) (yoloNet.cpp:233)
+==3703== 
+==3703== Conditional jump or move depends on uninitialised value(s)
+==3703==    at 0x7CA2650: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CA1FE7: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7DC37CF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7DC274F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0BFF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703== 
+==3703== Use of uninitialised value of size 8
+==3703==    at 0x7CA1FEC: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CADE23: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7DC37CF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7DC274F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0BFF: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7CB0D0B: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7C7518F: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x78DD867: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7774C03: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x77750DB: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x7775433: ??? (in /usr/lib/aarch64-linux-gnu/libnvinfer.so.10.3.0)
+==3703==    by 0x4A3435F: nvinfer1::IExecutionContext::executeV2(void* const*) (NvInferRuntime.h:3868)
+==3703== 
+==3703== 
+==3703== HEAP SUMMARY:
+==3703==     in use at exit: 182,296,807 bytes in 29,902 blocks
+==3703==   total heap usage: 1,926,127 allocs, 1,896,225 frees, 3,044,870,482 bytes allocated
+==3703== 
+==3703== LEAK SUMMARY:
+==3703==    definitely lost: 628 bytes in 16 blocks
+==3703==    indirectly lost: 48 bytes in 6 blocks
+==3703==      possibly lost: 50,371,128 bytes in 98 blocks
+==3703==    still reachable: 131,922,987 bytes in 29,761 blocks
+==3703==         suppressed: 0 bytes in 0 blocks
+==3703== Rerun with --leak-check=full to see details of leaked memory
+==3703== 
+==3703== Use --track-origins=yes to see where uninitialised values come from
+==3703== For lists of detected and suppressed errors, rerun with: -s
+==3703== ERROR SUMMARY: 193 errors from 9 contexts (suppressed: 0 from 0)
