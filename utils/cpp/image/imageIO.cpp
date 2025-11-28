@@ -172,15 +172,22 @@ bool loadImage( const char* filename, void** output, int* width, int* height, im
 	// allocate CUDA buffer for the image
 	const size_t imgSize = imageFormatSize(format, imgWidth, imgHeight);
 
+	// *output = malloc(imgSize);
+
+	// if (!*output) {
+	// 	LogError(LOG_IMAGE "loadImage() -- failed to allocate %zu bytes for image '%s'\n", imgSize, filename);
+	// 	return false;
+	// }
+
 	if( CUDA_FAILED(cudaMallocManaged((void**)output, imgSize)) )
 	{
 		LogError(LOG_IMAGE "loadImage() -- failed to allocate %zu bytes for image '%s'\n", imgSize, filename);
 		return false;
 	}
-	else if( RUNNING_ON_VALGRIND )
-	{
-		VALGRIND_MALLOCLIKE_BLOCK(*output, imgSize, 0, 1);
-	}
+	// else if( RUNNING_ON_VALGRIND )
+	// {
+	// 	VALGRIND_MALLOCLIKE_BLOCK(*output, imgSize, 0, 1);
+	// }
 
 	// convert from uint8 to float
 	if( format == IMAGE_RGB32F || format == IMAGE_RGBA32F )

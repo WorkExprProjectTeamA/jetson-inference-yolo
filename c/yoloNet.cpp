@@ -432,27 +432,27 @@ bool yoloNet::Overlay( void* input, void* output, uint32_t width, uint32_t heigh
 		return false;
 	}
 
-	uchar3* device_ptr;
+	// uchar3* device_ptr;
 
-	size_t imageSize = imageFormatSize(format, width, height);
+	// size_t imageSize = imageFormatSize(format, width, height);
 
-	if( CUDA_FAILED(cudaMalloc((void**)&device_ptr, imageSize)) )
-  	{
-      	LogError(LOG_TRT "detectNet -- Overlay() failed to allocate GPU memory\n");
-      	return false;
-  	}
-	CUDA(cudaMemset(device_ptr, 0, imageSize));
-	// if input and output are different images, copy the input to the output first
-	// then overlay the bounding boxes, ect. on top of the output image
-	// if( input != output )
+	// if( CUDA_FAILED(cudaMalloc((void**)&device_ptr, imageSize)) )
+  	// {
+    //   	LogError(LOG_TRT "detectNet -- Overlay() failed to allocate GPU memory\n");
+    //   	return false;
+  	// }
+	// CUDA(cudaMemset(device_ptr, 0, imageSize));
+	// // if input and output are different images, copy the input to the output first
+	// // then overlay the bounding boxes, ect. on top of the output image
+	// // if( input != output )
+	// // {
+	// // if( CUDA_FAILED(cudaMemcpy(output, input, imageFormatSize(format, width, height), cudaMemcpyDeviceToDevice)) )
+	// if (CUDA_FAILED(cudaMemcpy(device_ptr, input, imageSize, cudaMemcpyHostToDevice)))
 	// {
-	// if( CUDA_FAILED(cudaMemcpy(output, input, imageFormatSize(format, width, height), cudaMemcpyDeviceToDevice)) )
-	if (CUDA_FAILED(cudaMemcpy(device_ptr, input, imageSize, cudaMemcpyHostToDevice)))
-	{
-		LogError(LOG_TRT "detectNet -- Overlay() failed to copy input image to output image\n");
-		return false;
-	}
+	// 	LogError(LOG_TRT "detectNet -- Overlay() failed to copy input image to output image\n");
+	// 	return false;
 	// }
+	// // }
 
 	// make sure there are actually detections
 	if( numDetections <= 0 )
@@ -464,7 +464,7 @@ bool yoloNet::Overlay( void* input, void* output, uint32_t width, uint32_t heigh
 	// bounding box overlay
 	if( flags & OVERLAY_BOX )
 	{
-		if( CUDA_FAILED(cudaDetectionOverlay(device_ptr, device_ptr, width, height, format, detections, numDetections, mClassColors)) )
+		if( CUDA_FAILED(cudaDetectionOverlay(input, input, width, height, format, detections, numDetections, mClassColors)) )
 			return false;
 	}
 	
@@ -476,10 +476,10 @@ bool yoloNet::Overlay( void* input, void* output, uint32_t width, uint32_t heigh
 			const Detection* d = detections + n;
 			const float4& color = mClassColors[d->ClassID];
 
-			CUDA(cudaDrawLine(device_ptr, device_ptr, width, height, format, d->Left, d->Top, d->Right, d->Top, color, mLineWidth));
-			CUDA(cudaDrawLine(device_ptr, device_ptr, width, height, format, d->Right, d->Top, d->Right, d->Bottom, color, mLineWidth));
-			CUDA(cudaDrawLine(device_ptr, device_ptr, width, height, format, d->Left, d->Bottom, d->Right, d->Bottom, color, mLineWidth));
-			CUDA(cudaDrawLine(device_ptr, device_ptr, width, height, format, d->Left, d->Top, d->Left, d->Bottom, color, mLineWidth));
+			CUDA(cudaDrawLine(input, input, width, height, format, d->Left, d->Top, d->Right, d->Top, color, mLineWidth));
+			CUDA(cudaDrawLine(input, input, width, height, format, d->Right, d->Top, d->Right, d->Bottom, color, mLineWidth));
+			CUDA(cudaDrawLine(input, input, width, height, format, d->Left, d->Bottom, d->Right, d->Bottom, color, mLineWidth));
+			CUDA(cudaDrawLine(input, input, width, height, format, d->Left, d->Top, d->Left, d->Bottom, color, mLineWidth));
 		}
 	}
 			
@@ -530,21 +530,21 @@ bool yoloNet::Overlay( void* input, void* output, uint32_t width, uint32_t heigh
 			if( detections[n].TrackID >= 0 )
 				color.w *= 1.0f - (fminf(detections[n].TrackLost, 15.0f) / 15.0f);
 			
-			font->OverlayText(device_ptr, format, width, height, buffer, position.x, position.y, color);
+			font->OverlayText(input, format, width, height, buffer, position.x, position.y, color);
 		#endif
 		}
 
 	#ifdef BATCH_TEXT
-		font->OverlayText(device_ptr, format, width, height, labels, make_float4(255,255,255,255));
+		font->OverlayText(input, format, width, height, labels, make_float4(255,255,255,255));
 	#endif
 	}
 
-	if(CUDA_FAILED(cudaMemcpy(output, device_ptr, imageSize, cudaMemcpyDeviceToHost)) )
-	{
-		LogError(LOG_TRT "detectNet -- Overlay() failed to copy GPU to output\n");
-		cudaFree(device_ptr);
-		return false;
-	}
+	// if(CUDA_FAILED(cudaMemcpy(output, input, imageSize, cudaMemcpyDeviceToHost)) )
+	// {
+	// 	LogError(LOG_TRT "detectNet -- Overlay() failed to copy GPU to output\n");
+	// 	cudaFree(device_ptr);
+	// 	return false;
+	// }
 	
 	PROFILER_END(PROFILER_VISUALIZE);
 	return true;

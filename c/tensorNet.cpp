@@ -427,8 +427,6 @@ tensorNet::~tensorNet()
 	{
 	#ifdef USE_INPUT_TENSOR_CUDA_UNIFIED_MEMORY
 		CUDA_FREE(mOutputs[n].CUDA);
-	#else
-		CUDA_FREE_HOST(mOutputs[n].CPU);
 	#endif
 	}
 	

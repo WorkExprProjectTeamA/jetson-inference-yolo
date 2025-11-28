@@ -104,11 +104,12 @@ imageLoader::~imageLoader()
 	const size_t numBuffers = mBuffers.size();
 
 	for( size_t n=0; n < numBuffers; n++ ) {
-		if (RUNNING_ON_VALGRIND) {
-			VALGRIND_FREELIKE_BLOCK(mBuffers[n], 0);
-		}
+		CUDA_FREE(mBuffers[n]);
+		// if (RUNNING_ON_VALGRIND) {
+		// 	VALGRIND_FREELIKE_BLOCK(mBuffers[n], 0);
+		// }
 
-		CUDA(cudaFree(mBuffers[n]));
+		// CUDA(cudaFree(mBuffers[n]));
 	}
 
 	mBuffers.clear();
@@ -158,10 +159,10 @@ bool imageLoader::Capture( void** output, imageFormat format, uint64_t timeout, 
 
 	// reclaim old buffers
 	if( mBuffers.size() >= mOptions.numBuffers )
-	{
-		if (RUNNING_ON_VALGRIND) {
-			VALGRIND_FREELIKE_BLOCK(mBuffers[0], 0);
-		}
+	{	
+		// if (RUNNING_ON_VALGRIND) {
+		// 	VALGRIND_FREELIKE_BLOCK(mBuffers[0], 0);
+		// }
 
 		CUDA(cudaFree(mBuffers[0]));
 		mBuffers.erase(mBuffers.begin());
@@ -201,6 +202,7 @@ bool imageLoader::Capture( void** output, imageFormat format, uint64_t timeout, 
 	mOptions.height = imgHeight;
 
 	*output = imgPtr;
+
 	mBuffers.push_back(imgPtr);
 
 	RETURN_STATUS(OK);
